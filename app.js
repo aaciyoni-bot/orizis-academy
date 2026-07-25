@@ -961,6 +961,13 @@ async function submitAuth() {
     }
 }
 
+async function googleAuth() {
+    const err = $('authError');
+    if (MODE !== 'firebase') { err.textContent = 'Google sign-in needs the live site.'; err.classList.remove('hidden'); return; }
+    try { const p = new firebase.auth.GoogleAuthProvider(); await auth.signInWithPopup(p); /* onAuthStateChanged handles the rest */ }
+    catch (e) { err.textContent = friendlyAuthError(e); err.classList.remove('hidden'); }
+}
+
 function friendlyAuthError(e) {
     const c = (e && e.code) || '';
     if (c.includes('email-already-in-use')) return 'That email already has an account — try logging in.';
@@ -1073,6 +1080,7 @@ function boot() {
             else { currentUser = null; enrolledMap = {}; updateAccountUi(); }
         });
     } else {
+        const gw = document.getElementById('googleWrap'); if (gw) gw.style.display = 'none'; // demo mode: no Google popup
         const raw = localStorage.getItem('oa_local_user');
         if (raw) { const u = JSON.parse(raw); currentUser = u; updateAccountUi(); Store.listEnrollments().then(list => list.forEach(e => enrolledMap[e.courseId] = e)).then(renderCatalog); }
     }
@@ -1087,7 +1095,7 @@ window.OA = {
 // A few handlers used directly in HTML attributes:
 window.goHome = goHome; window.doSearch = doSearch; window.scrollToCatalog = scrollToCatalog;
 window.onAccountClick = onAccountClick; window.toggleAccountMenu = toggleAccountMenu;
-window.openAuth = openAuth; window.closeAuth = closeAuth; window.toggleAuthMode = toggleAuthMode; window.submitAuth = submitAuth; window.doSignOut = doSignOut;
+window.openAuth = openAuth; window.closeAuth = closeAuth; window.toggleAuthMode = toggleAuthMode; window.submitAuth = submitAuth; window.googleAuth = googleAuth; window.doSignOut = doSignOut;
 window.selectProvider = selectProvider; window.submitPayment = submitPayment; window.closeCheckout = closeCheckout; window.afterEnrol = afterEnrol;
 window.showMyLearning = showMyLearning;
 window.setPayMethod = setPayMethod; window.vpConnect = vpConnect; window.submitPointsPayment = submitPointsPayment; window.onVpChipClick = onVpChipClick;
