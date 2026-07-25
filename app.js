@@ -50,6 +50,7 @@ let payCourse = null;
 let pendingEnrollCourse = null;
 let learnCourse = null, learnKey = null;
 let authMode = 'login';
+let payMethod = 'momo';           // 'momo' | 'vp'
 
 /* ---------- Helpers ---------- */
 const fmtK = n => 'K' + Number(n || 0).toLocaleString('en-ZM', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -347,8 +348,85 @@ function openCheckout(course) {
     $('payStep1').classList.remove('hidden');
     $('payStep2').classList.add('hidden');
     $('payStep3').classList.add('hidden');
+    setPayMethod('momo');
+    configureCheckoutMethods();
     $('checkoutModal').classList.remove('hidden');
     $('checkoutModal').classList.add('flex');
+}
+
+/* ---------- VeriPoints checkout integration (no-op when plugin off) ---------- */
+function vpOn() { return window.VP && window.VP.isOn(); }
+
+function configureCheckoutMethods() {
+    const on = vpOn();
+    $('methodSelector').classList.toggle('hidden', !on); // MoMo-only look when off
+    if (!on) { setPayMethod('momo'); return; }
+    renderVpPanel();
+}
+
+function setPayMethod(m) {
+    payMethod = (m === 'vp' && vpOn()) ? 'vp' : 'momo';
+    $('momoPanel').classList.toggle('hidden', payMethod !== 'momo');
+    $('vpPanel').classList.toggle('hidden', payMethod !== 'vp');
+    const sel = 'border-ink-600 bg-ink-50 text-ink-800', un = 'border-slate-200 text-slate-500';
+    const mb = $('methodMomoBtn'), vb = $('methodVpBtn');
+    if (mb && vb) {
+        mb.className = 'border-2 rounded-xl p-3 text-center transition text-sm font-bold ' + (payMethod === 'momo' ? sel : un);
+        vb.className = 'border-2 rounded-xl p-3 text-center transition text-sm font-bold ' + (payMethod === 'vp' ? sel : un);
+    }
+    if (payMethod === 'vp') renderVpPanel();
+}
+
+function renderVpPanel() {
+    if (!vpOn() || !payCourse) return;
+    const st = window.VP.state();
+    $('vpBalance').textContent = st.points;
+    const need = window.VP.pointsFor(payCourse.priceZmw);
+    $('vpCost').textContent = 'This course costs ' + need + ' pts';
+    $('vpConnectWrap').classList.toggle('hidden', st.connected);
+    $('vpPayBtn').classList.toggle('hidden', !st.connected);
+    $('vpError').classList.add('hidden');
+}
+
+async function vpConnect() {
+    const ok = await window.VP.connect();
+    if (ok) renderVpPanel();
+}
+
+async function submitPointsPayment() {
+    const err = $('vpError');
+    err.classList.add('hidden');
+    const btn = $('vpPayBtn');
+    btn.disabled = true; btn.innerHTML = '<span class="spinner inline-block !w-4 !h-4 !border-2 align-middle mr-2"></span> Paying…';
+    try {
+        const ref = 'OAENR-' + Math.floor(100000 + Math.random() * 900000);
+        const r = await window.VP.payPoints({ priceZmw: payCourse.priceZmw, reference: ref });
+        await Store.createEnrollment(payCourse, 'VP:' + (r.ref || ref));
+        window.VP.earn({ priceZmw: payCourse.priceZmw, reference: ref }); // best-effort loyalty
+        $('payDoneCourse').textContent = payCourse.title;
+        $('payStep1').classList.add('hidden');
+        $('payStep3').classList.remove('hidden');
+    } catch (e) {
+        err.textContent = e.message || 'Payment with points failed.';
+        err.classList.remove('hidden');
+    } finally {
+        btn.disabled = false; btn.innerHTML = '<i class="fas fa-coins mr-1"></i> Pay with points';
+    }
+}
+
+function onVpChipClick() {
+    if (!vpOn()) return;
+    showToast('You have ' + window.VP.points() + ' VeriPoints — use them at checkout.');
+}
+
+function refreshVpChip() {
+    const chip = $('vpChip');
+    if (!chip) return;
+    const show = vpOn() && window.VP.isConnected();
+    chip.classList.toggle('hidden', !show);
+    if (show) $('vpChipVal').textContent = window.VP.points();
+    // keep the open checkout panel in sync
+    if (!$('checkoutModal').classList.contains('hidden') && payMethod === 'vp') renderVpPanel();
 }
 function closeCheckout() {
     $('checkoutModal').classList.add('hidden');
@@ -424,6 +502,7 @@ async function submitPayment() {
         err.classList.remove('hidden');
         return;
     }
+    if (window.VP && window.VP.isOn()) window.VP.earn({ priceZmw: payCourse.priceZmw, reference: ref }); // loyalty, best-effort
     $('payDoneCourse').textContent = payCourse.title;
     $('payStep2').classList.add('hidden');
     $('payStep3').classList.remove('hidden');
@@ -983,6 +1062,11 @@ if (IS_MOBILE && !IS_INSTALLED) setTimeout(showInstallBanner, 3500);
 function boot() {
     renderCatalog();
     showView('catalogView');
+    // VeriPoints plugin — safe no-op unless enabled & configured
+    if (window.VP) {
+        window.VP.onState(refreshVpChip);
+        window.VP.init().catch(() => {});
+    }
     if (MODE === 'firebase') {
         auth.onAuthStateChanged(u => {
             if (u) onSignedIn({ uid: u.uid, name: u.displayName || (u.email ? u.email.split('@')[0] : 'Learner'), email: u.email });
@@ -1006,6 +1090,7 @@ window.onAccountClick = onAccountClick; window.toggleAccountMenu = toggleAccount
 window.openAuth = openAuth; window.closeAuth = closeAuth; window.toggleAuthMode = toggleAuthMode; window.submitAuth = submitAuth; window.doSignOut = doSignOut;
 window.selectProvider = selectProvider; window.submitPayment = submitPayment; window.closeCheckout = closeCheckout; window.afterEnrol = afterEnrol;
 window.showMyLearning = showMyLearning;
+window.setPayMethod = setPayMethod; window.vpConnect = vpConnect; window.submitPointsPayment = submitPointsPayment; window.onVpChipClick = onVpChipClick;
 window.installApp = installApp; window.dismissInstall = dismissInstall; window.closeInstallGuide = closeInstallGuide;
 
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);

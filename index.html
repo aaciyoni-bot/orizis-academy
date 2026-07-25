@@ -127,6 +127,11 @@
                 <i class="fas fa-book-open-reader text-lg"></i> My Learning
             </button>
 
+            <!-- VeriPoints balance chip (hidden unless the plugin is on & connected) -->
+            <button id="vpChip" onclick="onVpChipClick()" class="hidden shrink-0 items-center gap-1.5 bg-gradient-to-br from-ink-700 to-ink-900 text-gold-soft font-bold text-sm px-3 py-1.5 rounded-full hover:brightness-110 transition">
+                <i class="fas fa-coins"></i> <span id="vpChipVal">0</span> <span class="hidden sm:inline text-white/70 font-semibold">pts</span>
+            </button>
+
             <div class="relative shrink-0">
                 <button id="accountBtn" onclick="onAccountClick()" class="flex items-center gap-2 text-slate-600 hover:text-ink-600 transition font-bold text-sm">
                     <i class="fas fa-circle-user text-2xl"></i>
@@ -404,6 +409,17 @@
                     <p class="text-emerald-100 text-sm mt-1"><span id="payCourseTitle"></span> · <b id="payTotal" class="text-white">K0.00</b></p>
                 </div>
                 <div class="p-5 space-y-4">
+                    <!-- Payment-method selector — only shown when VeriPoints is on -->
+                    <div id="methodSelector" class="hidden grid grid-cols-2 gap-2">
+                        <button id="methodMomoBtn" onclick="setPayMethod('momo')" class="border-2 rounded-xl p-3 text-center transition text-sm font-bold">
+                            <i class="fas fa-mobile-screen block text-lg mb-0.5"></i>Mobile Money
+                        </button>
+                        <button id="methodVpBtn" onclick="setPayMethod('vp')" class="border-2 rounded-xl p-3 text-center transition text-sm font-bold">
+                            <i class="fas fa-coins block text-lg mb-0.5 text-gold-deep"></i>VeriPoints
+                        </button>
+                    </div>
+
+                    <div id="momoPanel" class="space-y-4">
                     <div>
                         <label class="text-sm font-semibold text-slate-600 block mb-2">Choose your network</label>
                         <div class="grid grid-cols-3 gap-2">
@@ -434,6 +450,25 @@
                     <button onclick="submitPayment()" class="w-full bg-zam-green hover:bg-green-800 text-white font-bold py-3.5 rounded-xl transition">
                         Send payment request <i class="fas fa-arrow-right ml-1"></i>
                     </button>
+                    </div><!-- /momoPanel -->
+
+                    <!-- VeriPoints pay panel -->
+                    <div id="vpPanel" class="hidden space-y-4">
+                        <div class="bg-ink-50 rounded-xl p-4 text-center">
+                            <div class="text-xs text-slate-500">Your VeriPoints balance</div>
+                            <div class="text-2xl font-extrabold text-ink-700 mt-0.5"><i class="fas fa-coins text-gold-deep mr-1"></i><span id="vpBalance">0</span> pts</div>
+                            <div id="vpCost" class="text-sm text-slate-500 mt-1"></div>
+                        </div>
+                        <div id="vpConnectWrap" class="hidden">
+                            <p class="text-sm text-slate-500 text-center mb-2">Connect your ORIZIS wallet to pay with points.</p>
+                            <button onclick="vpConnect()" class="w-full bg-ink-600 hover:bg-ink-700 text-white font-bold py-3 rounded-xl transition"><i class="fas fa-link mr-2"></i>Connect VeriPoints</button>
+                        </div>
+                        <p id="vpError" class="text-zam-red text-sm font-semibold hidden"></p>
+                        <button id="vpPayBtn" onclick="submitPointsPayment()" class="w-full bg-ink-700 hover:bg-ink-800 text-white font-bold py-3.5 rounded-xl transition">
+                            <i class="fas fa-coins mr-1"></i> Pay with points
+                        </button>
+                    </div>
+
                     <button onclick="closeCheckout()" class="w-full text-slate-400 text-sm py-1 hover:text-slate-600">Cancel</button>
                 </div>
             </div>
@@ -506,6 +541,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="config.js"></script>
     <script src="courses-data.js"></script>
+    <script src="veripoints.js"></script>
     <script src="app.js"></script>
 </body>
 </html>

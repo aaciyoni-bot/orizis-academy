@@ -28,5 +28,29 @@ window.OA_CONFIG = {
     SUPPORT_EMAIL: "academy@orizis.com",
 
     // Where "Join the ORIZIS Builder Network" points (form / page / email link).
-    BUILDER_NETWORK_URL: "mailto:academy@orizis.com?subject=ORIZIS%20Builder%20Network%20application"
+    BUILDER_NETWORK_URL: "mailto:academy@orizis.com?subject=ORIZIS%20Builder%20Network%20application",
+
+    /* ============================================================
+       VeriPoints — shared ORIZIS wallet & loyalty (OPTIONAL PLUGIN)
+       ------------------------------------------------------------
+       Master switch. While false (default) the site is 100% MoMo-only:
+       no VeriPoints UI, no SDK load, no behaviour change at all.
+       Flip to true ONLY after the central VeriPoints project is live
+       and the values below are filled in (see VERIPOINTS.md).
+       ============================================================ */
+    VERIPOINTS_ENABLED: false,
+
+    // URL of the shared SDK on the CENTRAL VeriPoints project
+    // e.g. "https://<central>.web.app/sdk/veripoints-sdk.js"
+    VERIPOINTS_SDK_URL: "",
+
+    // Central VeriPoints Firebase project config (the SDK signs the user in
+    // HERE, so the wallet/points are the SAME across every ORIZIS site).
+    VERIPOINTS_CONFIG: { apiKey: "", authDomain: "", projectId: "", storageBucket: "", messagingSenderId: "", appId: "" },
+    VERIPOINTS_ORIGIN: "",   // central store origin (for top-up redirects)
+    VERIPOINTS_REGION: "europe-west1",
+
+    // Loyalty economics (points mode — NOT real e-money).
+    EARN_PERCENT: 3,         // % of each purchase credited back as points
+    REDEEM_RATE: 1           // 1 point = this many ZMW when paying with points
 };
