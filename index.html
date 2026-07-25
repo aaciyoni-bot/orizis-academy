@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>ORIZIS Academy — Learn a Skill, Earn a Certificate 🇿🇲🎓</title>
+    <meta name="description" content="ORIZIS Academy — affordable online courses for Zambia. Learn business, web building, digital marketing, English and job skills on your phone. Pay with Mobile Money and earn a Certificate of Completion.">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#4338ca">
+    <link rel="icon" type="image/png" href="icon-192.png">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="ORIZIS Academy">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        ink: {
+                            50: '#eef2ff', 100: '#e0e7ff', 200: '#c7d2fe', 300: '#a5b4fc', 400: '#818cf8',
+                            500: '#6366f1', 600: '#4f46e5', 700: '#4338ca', 800: '#3730a3', 900: '#312e81'
+                        },
+                        gold: { DEFAULT: '#e3ae4e', soft: '#f4d58d', deep: '#b8862f' },
+                        zam: { green: '#198a00', red: '#de2010', black: '#000000', orange: '#ef7d00' }
+                    },
+                    fontFamily: { sans: ['Inter', 'sans-serif'], display: ['"Playfair Display"', 'serif'] }
+                }
+            }
+        }
+    </script>
+    <style>
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .fade-in { animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        .spinner { border: 3px solid #e0e7ff; border-top-color: #4338ca; border-radius: 50%; width: 40px; height: 40px; animation: spin 0.8s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .pulse-ring { animation: pulseRing 1.5s ease-out infinite; }
+        @keyframes pulseRing { 0% { box-shadow: 0 0 0 0 rgba(25,138,0,0.4); } 100% { box-shadow: 0 0 0 16px rgba(25,138,0,0); } }
+        html { scroll-behavior: smooth; }
+        .cat-chip { flex-shrink: 0; display:inline-flex; align-items:center; gap:6px; background: #e0e7ff; border-radius: 9999px; padding: 6px 14px; font-size: 12px; font-weight: 600; color: #3730a3; transition: all .2s; white-space:nowrap; }
+        .cat-chip:hover, .cat-chip.active { background: #4338ca; color: #fff; }
+        .provider-btn.selected { border-color: #4338ca !important; background: #eef2ff; }
+        .faq-item { background: #eef2ff; border-radius: 16px; padding: 16px 20px; }
+        .faq-item summary { font-weight: 700; cursor: pointer; list-style: none; display: flex; justify-content: space-between; align-items: center; }
+        .faq-item summary::-webkit-details-marker { display: none; }
+        .faq-item summary::after { content: '+'; font-size: 20px; color: #4338ca; font-weight: 800; }
+        .faq-item[open] summary::after { content: '−'; }
+        .faq-item p { margin-top: 10px; color: #475569; font-size: 14px; line-height: 1.6; }
+        .lesson-body h2 { font-weight: 800; font-size: 1.05rem; margin: 1.1rem 0 .4rem; color:#312e81; }
+        .lesson-body p { margin: .6rem 0; line-height: 1.75; color:#334155; }
+        .lesson-body ul { margin: .5rem 0 .5rem 1.1rem; list-style: disc; }
+        .lesson-body li { margin: .3rem 0; line-height: 1.7; color:#334155; }
+        .guide-arrow-down { animation: bounceDown 1s ease-in-out infinite; }
+        .guide-arrow-up { animation: bounceUp 1s ease-in-out infinite; }
+        @keyframes bounceDown { 0%,100% { transform: translateY(0); } 50% { transform: translateY(14px); } }
+        @keyframes bounceUp { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-14px); } }
+    </style>
+</head>
+<body class="bg-ink-50 font-sans text-slate-800 min-h-screen flex flex-col">
+
+    <!-- ═══ ORIZIS INTRO · standalone module (indigo/gold for the Academy) ═══ -->
+    <div id="orizis-intro">
+      <style>
+        #orizis-intro { position: fixed; inset: 0; z-index: 999999; background: #0b1020; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; transition: opacity 0.45s ease; }
+        #orizis-intro.oi-out { opacity: 0; pointer-events: none; }
+        #orizis-intro .oi-mark { font-family: 'Playfair Display', Georgia, serif; font-weight: 900; font-size: clamp(38px, 9vw, 72px); letter-spacing: 0.22em; margin-right: -0.22em; background: linear-gradient(100deg, #312e81 0%, #c7d2fe 28%, #e3ae4e 50%, #c7d2fe 72%, #312e81 100%); background-size: 240% auto; -webkit-background-clip: text; background-clip: text; color: transparent; opacity: 0; animation: oiShine 1.9s ease forwards, oiRise 0.9s cubic-bezier(0.22,1,0.36,1) forwards; }
+        #orizis-intro .oi-sub { font-family: 'Inter', Arial, sans-serif; font-weight: 700; font-size: clamp(10px, 2.2vw, 14px); letter-spacing: 0.55em; margin-right: -0.55em; color: #7c85c7; margin-top: 14px; opacity: 0; animation: oiFade 0.7s ease 0.55s forwards; }
+        #orizis-intro .oi-line { width: 0; height: 1px; background: linear-gradient(90deg, transparent, #e3ae4e, transparent); margin-top: 22px; animation: oiLine 1.1s ease 0.35s forwards; }
+        #orizis-intro .oi-load { display: flex; align-items: center; gap: 8px; margin-top: 26px; color: #7c85c7; font-family: 'Inter', Arial, sans-serif; font-weight: 600; font-size: 11px; letter-spacing: 0.2em; opacity: 0; animation: oiFade 0.7s ease 0.9s forwards; }
+        #orizis-intro .oi-spin { width: 14px; height: 14px; border: 2px solid rgba(227,174,78,0.25); border-top-color: #e3ae4e; border-radius: 50%; animation: oiSpin 0.9s linear infinite; }
+        @keyframes oiSpin { to { transform: rotate(360deg); } }
+        @keyframes oiShine { from { background-position: 200% center; } to { background-position: -40% center; } }
+        @keyframes oiRise { from { opacity: 0; transform: translateY(14px) scale(0.97); } to { opacity: 1; transform: none; } }
+        @keyframes oiFade { to { opacity: 1; } }
+        @keyframes oiLine { to { width: min(320px, 60vw); } }
+      </style>
+      <div class="oi-mark">ORIZIS</div>
+      <div class="oi-line"></div>
+      <div class="oi-sub">TECHNOLOGY</div>
+      <div class="oi-load"><div class="oi-spin"></div>LOADING</div>
+      <script>
+        (function () {
+          var el = document.getElementById('orizis-intro');
+          var done = false;
+          function out() { if (done) return; done = true; el.classList.add('oi-out'); setTimeout(function () { el.remove(); }, 500); }
+          el.addEventListener('click', out);
+          el.addEventListener('touchstart', out, { passive: true });
+          setTimeout(out, 1300);
+        })();
+      </script>
+    </div>
+    <!-- ═══ /ORIZIS INTRO ═══ -->
+
+    <!-- ======================= TOP BAR ======================= -->
+    <div class="bg-ink-900 text-white text-xs sm:text-sm py-1.5 px-4 text-center">
+        <i class="fas fa-graduation-cap mr-1 text-gold-soft"></i> Learn a skill in about an hour · Pay with <b>MTN MoMo</b>, <b>Airtel Money</b> &amp; <b>Zamtel</b> · Earn a <b>Certificate of Completion</b>
+    </div>
+
+    <!-- ======================= HEADER ======================= -->
+    <header class="bg-white shadow-sm sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex items-center gap-3 sm:gap-6">
+            <a href="#" onclick="goHome(); return false;" class="flex items-center gap-2 shrink-0">
+                <div class="bg-gradient-to-br from-ink-600 to-ink-800 text-white w-10 h-10 rounded-xl flex items-center justify-center text-lg shadow-md">
+                    <i class="fas fa-graduation-cap"></i>
+                </div>
+                <div class="hidden sm:block">
+                    <h1 class="text-xl font-display font-extrabold tracking-tight leading-none">ORIZIS <span class="text-ink-600">Academy</span></h1>
+                    <p class="text-[10px] text-slate-400 leading-none mt-0.5">Learn. Get certified. Move forward.</p>
+                </div>
+            </a>
+
+            <div class="flex-1 relative">
+                <input id="searchInput" type="text" placeholder="Search courses — web, marketing, English..."
+                    class="w-full border-2 border-ink-500 rounded-full py-2.5 pl-5 pr-12 text-sm focus:outline-none focus:ring-2 focus:ring-ink-100"
+                    onkeydown="if(event.key==='Enter') doSearch()">
+                <button onclick="doSearch()" class="absolute right-1 top-1 bottom-1 bg-ink-600 hover:bg-ink-700 text-white rounded-full w-10 flex items-center justify-center transition">
+                    <i class="fas fa-search"></i>
+                </button>
+            </div>
+
+            <button onclick="showMyLearning()" class="hidden sm:inline-flex shrink-0 text-slate-600 hover:text-ink-600 transition text-sm font-bold items-center gap-1.5">
+                <i class="fas fa-book-open-reader text-lg"></i> My Learning
+            </button>
+
+            <div class="relative shrink-0">
+                <button id="accountBtn" onclick="onAccountClick()" class="flex items-center gap-2 text-slate-600 hover:text-ink-600 transition font-bold text-sm">
+                    <i class="fas fa-circle-user text-2xl"></i>
+                    <span id="accountLabel" class="hidden sm:inline">Log in</span>
+                </button>
+                <div id="accountMenu" class="hidden absolute right-0 mt-2 w-52 bg-white rounded-xl shadow-xl border border-slate-100 py-2 z-50">
+                    <div id="accountMenuName" class="px-4 py-2 text-xs text-slate-400 border-b border-slate-100"></div>
+                    <button onclick="showMyLearning(); toggleAccountMenu(false)" class="w-full text-left px-4 py-2.5 text-sm hover:bg-ink-50 font-semibold"><i class="fas fa-book-open-reader mr-2 text-ink-600"></i>My Learning</button>
+                    <button onclick="doSignOut()" class="w-full text-left px-4 py-2.5 text-sm hover:bg-ink-50 font-semibold text-zam-red"><i class="fas fa-right-from-bracket mr-2"></i>Log out</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Category chips -->
+        <nav id="catNav" class="max-w-7xl mx-auto px-4 pb-2.5 flex gap-2 items-center overflow-x-auto no-scrollbar"></nav>
+    </header>
+
+    <!-- ======================= HERO ======================= -->
+    <section id="heroSection" class="relative overflow-hidden bg-ink-900 text-white">
+        <div class="absolute inset-0 bg-gradient-to-br from-ink-700 via-ink-900 to-[#0b1020]"></div>
+        <div class="absolute -top-24 -right-24 w-96 h-96 bg-ink-500/30 rounded-full blur-3xl"></div>
+        <div class="absolute -bottom-32 -left-20 w-96 h-96 bg-gold/20 rounded-full blur-3xl"></div>
+        <div class="relative max-w-7xl mx-auto px-4 py-12 sm:py-16 grid sm:grid-cols-2 gap-8 items-center">
+            <div>
+                <span class="inline-flex items-center gap-1.5 bg-white/10 backdrop-blur text-ink-100 text-xs font-bold px-3 py-1.5 rounded-full border border-white/10"><i class="fas fa-certificate text-gold-soft"></i> Real skills. Real certificate. Real opportunities.</span>
+                <h2 class="mt-4 text-3xl sm:text-5xl font-display font-extrabold leading-tight">Learn a skill,<br>earn a <span class="bg-gradient-to-r from-gold-soft to-white bg-clip-text text-transparent">certificate</span> 🇿🇲</h2>
+                <p class="mt-3 text-ink-100/90 text-sm sm:text-base max-w-md">Affordable online courses built for Zambia — business, web building, digital marketing, English and job skills. Study on your phone, pay in Kwacha with Mobile Money, and finish with a Certificate of Completion to show employers.</p>
+                <div class="mt-5 flex flex-wrap gap-3 text-sm font-semibold">
+                    <span class="bg-white/10 backdrop-blur px-4 py-2 rounded-full border border-white/10"><i class="fas fa-clock mr-1 text-gold-soft"></i> ~1 hour per course</span>
+                    <span class="bg-white/10 backdrop-blur px-4 py-2 rounded-full border border-white/10"><i class="fas fa-mobile-screen mr-1 text-green-400"></i> Mobile Money</span>
+                    <span class="bg-white/10 backdrop-blur px-4 py-2 rounded-full border border-white/10"><i class="fas fa-award mr-1 text-gold-soft"></i> Verifiable certificate</span>
+                </div>
+                <div class="mt-6 flex flex-wrap gap-3">
+                    <button onclick="scrollToCatalog()" class="bg-ink-600 hover:bg-ink-700 text-white font-bold px-6 py-3 rounded-full transition shadow-lg shadow-ink-900/40"><i class="fas fa-graduation-cap mr-1"></i> Browse courses</button>
+                    <a href="#how-it-works" class="inline-flex items-center text-sm font-bold text-white/90 hover:text-white underline underline-offset-4 px-2">How it works ↓</a>
+                </div>
+            </div>
+            <div class="hidden sm:grid grid-cols-3 gap-3 text-center text-sm">
+                <div class="bg-white/5 border border-white/10 rounded-2xl p-4 backdrop-blur"><div class="text-3xl text-gold-soft"><i class="fas fa-code"></i></div><p class="mt-2 font-semibold text-ink-50">Build websites</p></div>
+                <div class="bg-white/5 border border-white/10 rounded-2xl p-4 backdrop-blur"><div class="text-3xl text-green-400"><i class="fas fa-money-bill-trend-up"></i></div><p class="mt-2 font-semibold text-ink-50">Earn online</p></div>
+                <div class="bg-white/5 border border-white/10 rounded-2xl p-4 backdrop-blur"><div class="text-3xl text-ink-200"><i class="fas fa-briefcase"></i></div><p class="mt-2 font-semibold text-ink-50">Job skills</p></div>
+                <div class="bg-white/5 border border-white/10 rounded-2xl p-4 backdrop-blur col-span-3"><p class="font-semibold text-ink-50"><i class="fas fa-user-graduate text-gold-soft mr-1"></i> Top graduates can apply to the <b>ORIZIS Builder Network</b></p></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ======================= CATALOG (home) ======================= -->
+    <main id="catalogView" class="max-w-7xl mx-auto px-4 py-8 w-full flex-1">
+        <div class="flex items-center justify-between mb-4">
+            <h3 id="resultsTitle" class="text-xl font-bold">All courses</h3>
+            <span id="resultsCount" class="text-sm text-slate-400"></span>
+        </div>
+        <div id="courseGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+        <div id="emptyState" class="hidden text-center py-16 text-slate-400">
+            <i class="fas fa-magnifying-glass text-4xl mb-3"></i><p>No courses match your search.</p>
+        </div>
+    </main>
+
+    <!-- ======================= COURSE DETAIL VIEW ======================= -->
+    <main id="courseView" class="hidden max-w-5xl mx-auto px-4 py-8 w-full flex-1"></main>
+
+    <!-- ======================= LEARN VIEW ======================= -->
+    <main id="learnView" class="hidden max-w-6xl mx-auto px-4 py-6 w-full flex-1"></main>
+
+    <!-- ======================= QUIZ VIEW ======================= -->
+    <main id="quizView" class="hidden max-w-3xl mx-auto px-4 py-8 w-full flex-1"></main>
+
+    <!-- ======================= CERTIFICATE VIEW ======================= -->
+    <main id="certView" class="hidden max-w-3xl mx-auto px-4 py-8 w-full flex-1"></main>
+
+    <!-- ======================= MY LEARNING VIEW ======================= -->
+    <main id="myLearningView" class="hidden max-w-5xl mx-auto px-4 py-8 w-full flex-1"></main>
+
+    <!-- ======================= HOW IT WORKS ======================= -->
+    <section id="how-it-works" class="bg-white border-t border-ink-100">
+        <div class="max-w-7xl mx-auto px-4 py-14">
+            <h3 class="text-2xl sm:text-3xl font-display font-extrabold text-center">How ORIZIS Academy Works</h3>
+            <p class="text-center text-slate-500 mt-2 max-w-xl mx-auto">From your phone to a certificate in four simple steps — no classroom, no credit card.</p>
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mt-10">
+                <div class="text-center p-5 rounded-2xl bg-ink-50">
+                    <div class="text-4xl text-ink-500"><i class="fas fa-list-check"></i></div>
+                    <div class="mt-3 text-xs font-bold text-ink-600">STEP 1</div>
+                    <h4 class="font-bold mt-1">Choose a course</h4>
+                    <p class="text-sm text-slate-500 mt-1">Pick from business, web, marketing, English and job-skill courses — each about one hour.</p>
+                </div>
+                <div class="text-center p-5 rounded-2xl bg-ink-50">
+                    <div class="text-4xl text-ink-500"><i class="fas fa-mobile-screen"></i></div>
+                    <div class="mt-3 text-xs font-bold text-ink-600">STEP 2</div>
+                    <h4 class="font-bold mt-1">Pay with Mobile Money</h4>
+                    <p class="text-sm text-slate-500 mt-1">A small one-time fee in Kwacha. Approve the prompt on your phone with your PIN.</p>
+                </div>
+                <div class="text-center p-5 rounded-2xl bg-ink-50">
+                    <div class="text-4xl text-ink-500"><i class="fas fa-book-open-reader"></i></div>
+                    <div class="mt-3 text-xs font-bold text-ink-600">STEP 3</div>
+                    <h4 class="font-bold mt-1">Learn &amp; pass the exam</h4>
+                    <p class="text-sm text-slate-500 mt-1">Work through the lessons at your pace, then pass a short exam (70% to pass).</p>
+                </div>
+                <div class="text-center p-5 rounded-2xl bg-ink-50">
+                    <div class="text-4xl text-ink-500"><i class="fas fa-award"></i></div>
+                    <div class="mt-3 text-xs font-bold text-ink-600">STEP 4</div>
+                    <h4 class="font-bold mt-1">Get your certificate</h4>
+                    <p class="text-sm text-slate-500 mt-1">Download a certificate with your name and a unique verification code to share with employers.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ======================= BUILDER NETWORK ======================= -->
+    <section id="builder" class="bg-gradient-to-br from-ink-800 to-ink-900 text-white">
+        <div class="max-w-7xl mx-auto px-4 py-14 grid sm:grid-cols-2 gap-8 items-center">
+            <div>
+                <span class="inline-flex items-center gap-1.5 bg-white/10 text-gold-soft text-xs font-bold px-3 py-1.5 rounded-full border border-white/10"><i class="fas fa-user-graduate"></i> For our best graduates</span>
+                <h3 class="mt-4 text-2xl sm:text-3xl font-display font-extrabold">The ORIZIS Builder Network</h3>
+                <p class="mt-3 text-ink-100/90 text-sm sm:text-base">Finish a Builder-track course, build a portfolio project and you can <b>apply</b> to join the ORIZIS Builder Network — a pool of vetted builders who get the chance to work on real, paid projects for ORIZIS Technology and its partners.</p>
+                <p class="mt-2 text-ink-100/60 text-xs">Joining the network is an opportunity to apply for paid project work — it is not a guarantee of employment. Selection is based on your skills and portfolio.</p>
+                <a id="builderApplyBtn" href="#" class="inline-flex items-center gap-2 mt-5 bg-gold text-ink-900 font-extrabold px-6 py-3 rounded-full hover:brightness-105 transition"><i class="fas fa-paper-plane"></i> Learn about applying</a>
+            </div>
+            <div class="grid grid-cols-2 gap-3 text-sm">
+                <div class="bg-white/5 border border-white/10 rounded-2xl p-4"><div class="text-2xl text-gold-soft"><i class="fas fa-code"></i></div><p class="mt-2 font-semibold">Build real sites</p></div>
+                <div class="bg-white/5 border border-white/10 rounded-2xl p-4"><div class="text-2xl text-gold-soft"><i class="fas fa-folder-open"></i></div><p class="mt-2 font-semibold">Show a portfolio</p></div>
+                <div class="bg-white/5 border border-white/10 rounded-2xl p-4"><div class="text-2xl text-gold-soft"><i class="fas fa-handshake"></i></div><p class="mt-2 font-semibold">Apply to the network</p></div>
+                <div class="bg-white/5 border border-white/10 rounded-2xl p-4"><div class="text-2xl text-gold-soft"><i class="fas fa-sack-dollar"></i></div><p class="mt-2 font-semibold">Chance at paid work</p></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ======================= ABOUT ======================= -->
+    <section id="about" class="bg-ink-50 border-t border-ink-100">
+        <div class="max-w-7xl mx-auto px-4 py-14 grid sm:grid-cols-2 gap-10 items-center">
+            <div>
+                <h3 class="text-2xl sm:text-3xl font-display font-extrabold">About ORIZIS <span class="text-ink-600">Academy</span></h3>
+                <p class="mt-4 text-slate-600 leading-relaxed">Skills change lives — but training is often too expensive, too far away, or takes too long. ORIZIS Academy makes it simple: short, practical online courses you can finish in about an hour, on the phone you already own.</p>
+                <p class="mt-3 text-slate-600 leading-relaxed">Every course is built to be <b>useful the same day</b> — how to build a website, earn online, market a business, write a strong CV, or run the money side of a small shop. You pay a small fee in Kwacha with Mobile Money, learn at your own pace, pass a short exam, and earn a Certificate of Completion you can show to employers.</p>
+                <p class="mt-3 text-slate-600 leading-relaxed">Proudly part of <b>ORIZIS Technology</b>. 🇿🇲</p>
+            </div>
+            <div class="grid grid-cols-1 gap-4">
+                <div class="flex items-start gap-4 bg-white rounded-2xl p-5 shadow-sm">
+                    <div class="text-2xl text-ink-500 w-8 text-center shrink-0"><i class="fas fa-wallet"></i></div>
+                    <div><h4 class="font-bold">Affordable, pay local</h4><p class="text-sm text-slate-500">Low prices in Kwacha, paid with the Mobile Money you already use. No bank, no card.</p></div>
+                </div>
+                <div class="flex items-start gap-4 bg-white rounded-2xl p-5 shadow-sm">
+                    <div class="text-2xl text-ink-500 w-8 text-center shrink-0"><i class="fas fa-award"></i></div>
+                    <div><h4 class="font-bold">A certificate that verifies</h4><p class="text-sm text-slate-500">Each certificate carries a unique code employers can check online — proof it is real.</p></div>
+                </div>
+                <div class="flex items-start gap-4 bg-white rounded-2xl p-5 shadow-sm">
+                    <div class="text-2xl text-ink-500 w-8 text-center shrink-0"><i class="fas fa-mobile-screen-button"></i></div>
+                    <div><h4 class="font-bold">Learn on your phone</h4><p class="text-sm text-slate-500">Install the app to your home screen and learn anywhere, one lesson at a time.</p></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ======================= FAQ ======================= -->
+    <section id="faq" class="bg-white border-t border-ink-100">
+        <div class="max-w-3xl mx-auto px-4 py-14">
+            <h3 class="text-2xl sm:text-3xl font-display font-extrabold text-center">Frequently Asked Questions</h3>
+            <div class="mt-8 space-y-3">
+                <details class="faq-item">
+                    <summary>Is the certificate an official diploma or degree?</summary>
+                    <p>No. ORIZIS Academy issues a <b>Certificate of Completion</b> that proves you finished a course and passed its exam. It is not a government- or TEVETA-accredited qualification, diploma or degree. It is real proof of the skills you learned, useful to show employers and clients.</p>
+                </details>
+                <details class="faq-item">
+                    <summary>Do I need a computer or a credit card?</summary>
+                    <p>No. You can do everything on a smartphone, and you pay with Mobile Money — MTN MoMo, Airtel Money or Zamtel. No bank account or credit card is needed.</p>
+                </details>
+                <details class="faq-item">
+                    <summary>How long does a course take?</summary>
+                    <p>Each course is designed to take about one hour, split into short lessons. You can start, stop and continue whenever it suits you — your progress is saved.</p>
+                </details>
+                <details class="faq-item">
+                    <summary>What score do I need to pass?</summary>
+                    <p>After you finish all the lessons you take a short exam. You need <b>70% or more</b> to pass and receive your certificate. If you don't pass, you can review the lessons and try again.</p>
+                </details>
+                <details class="faq-item">
+                    <summary>Can an employer check my certificate?</summary>
+                    <p>Yes. Every certificate has a unique verification code and a link. Anyone can open the verification page, enter the code, and confirm your name, course and date.</p>
+                </details>
+                <details class="faq-item">
+                    <summary>What is the ORIZIS Builder Network?</summary>
+                    <p>It's an opportunity for our best web-building graduates. After completing a Builder-track course and building a portfolio project, you can <b>apply</b> to join a pool of vetted builders who may be offered real paid project work. It is an opportunity to apply — not a guaranteed job.</p>
+                </details>
+            </div>
+        </div>
+    </section>
+
+    <!-- ======================= SUPPORT BANNER ======================= -->
+    <section id="support" class="bg-ink-900 text-white">
+        <div class="max-w-7xl mx-auto px-4 py-10 text-center">
+            <h3 class="text-2xl font-display font-extrabold">Questions before you start? <i class="fas fa-comments text-gold-soft ml-1"></i></h3>
+            <p class="mt-2 text-ink-100/90">Course advice, payments, certificates — our team is here to help.</p>
+            <div class="mt-5 flex flex-wrap gap-3 justify-center">
+                <a id="waSupportBtn" href="#" target="_blank" rel="noopener"
+                   class="inline-flex items-center gap-2 bg-[#25D366] text-white font-extrabold px-8 py-3.5 rounded-full hover:brightness-110 transition">
+                    <i class="fab fa-whatsapp text-2xl"></i> Chat on WhatsApp
+                </a>
+                <a id="emailSupportBtn" href="#"
+                   class="inline-flex items-center gap-2 bg-white/10 border border-white/20 text-white font-bold px-8 py-3.5 rounded-full hover:bg-white/20 transition">
+                    <i class="fas fa-envelope text-xl"></i> Email us
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- ======================= FOOTER ======================= -->
+    <footer class="bg-[#0b1020] text-ink-100/70 mt-auto">
+        <div class="max-w-7xl mx-auto px-4 py-10 grid sm:grid-cols-3 gap-8 text-sm">
+            <div>
+                <div class="flex items-center gap-2 mb-3">
+                    <div class="bg-gradient-to-br from-ink-600 to-ink-800 text-white w-8 h-8 rounded-lg flex items-center justify-center"><i class="fas fa-graduation-cap"></i></div>
+                    <span class="font-display font-extrabold text-white text-lg">ORIZIS <span class="text-ink-300">Academy</span></span>
+                </div>
+                <p class="text-ink-100/60">Affordable, practical online courses for Zambia. Learn a skill, earn a Certificate of Completion, and move your career or business forward.</p>
+            </div>
+            <div>
+                <h4 class="font-bold text-white mb-3">Quick links</h4>
+                <ul class="space-y-2 text-ink-100/60">
+                    <li><a href="#" onclick="goHome();return false;" class="hover:text-white transition">All courses</a></li>
+                    <li><a href="#how-it-works" class="hover:text-white transition">How it works</a></li>
+                    <li><a href="#builder" class="hover:text-white transition">Builder Network</a></li>
+                    <li><a href="#faq" class="hover:text-white transition">FAQ</a></li>
+                    <li><a href="verify.html" class="hover:text-white transition">Verify a certificate</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="font-bold text-white mb-3">We accept</h4>
+                <div class="flex flex-wrap gap-2">
+                    <span class="bg-yellow-400 text-black font-bold px-3 py-1.5 rounded-lg text-xs">MTN MoMo</span>
+                    <span class="bg-red-600 text-white font-bold px-3 py-1.5 rounded-lg text-xs">Airtel Money</span>
+                    <span class="bg-green-700 text-white font-bold px-3 py-1.5 rounded-lg text-xs">Zamtel</span>
+                </div>
+                <p class="mt-4 text-ink-100/50 text-xs">ORIZIS Academy issues <b>Certificates of Completion</b>. These are not government- or TEVETA-accredited qualifications.</p>
+            </div>
+        </div>
+        <div class="border-t border-white/10 text-center py-4 text-xs text-ink-100/50">© 2026 ORIZIS Academy · an ORIZIS TECHNOLOGY brand. All rights reserved.</div>
+    </footer>
+
+    <!-- ======================= AUTH MODAL ======================= -->
+    <div id="authModal" class="fixed inset-0 bg-black/60 z-[70] hidden items-center justify-center p-4" onclick="if(event.target===this) closeAuth()">
+        <div class="bg-white rounded-2xl w-full max-w-md overflow-hidden fade-in">
+            <div class="bg-gradient-to-br from-ink-700 to-ink-900 text-white p-5">
+                <h3 class="font-bold text-lg"><i class="fas fa-graduation-cap mr-2"></i><span id="authTitle">Log in to ORIZIS Academy</span></h3>
+                <p class="text-ink-100/80 text-sm mt-1" id="authSubtitle">Save your progress and earn certificates.</p>
+            </div>
+            <div class="p-5 space-y-4">
+                <div id="authNameWrap" class="hidden">
+                    <label class="text-sm font-semibold text-slate-600 block mb-2">Full name</label>
+                    <input id="authName" type="text" placeholder="e.g. Chanda Mwansa" class="w-full border border-slate-300 rounded-xl px-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ink-500">
+                </div>
+                <div>
+                    <label class="text-sm font-semibold text-slate-600 block mb-2">Email</label>
+                    <input id="authEmail" type="email" placeholder="you@email.com" class="w-full border border-slate-300 rounded-xl px-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ink-500">
+                </div>
+                <div id="authPassWrap">
+                    <label class="text-sm font-semibold text-slate-600 block mb-2">Password</label>
+                    <input id="authPass" type="password" placeholder="At least 6 characters" class="w-full border border-slate-300 rounded-xl px-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ink-500">
+                </div>
+                <p id="authError" class="text-zam-red text-sm font-semibold hidden"></p>
+                <button id="authSubmit" onclick="submitAuth()" class="w-full bg-ink-600 hover:bg-ink-700 text-white font-bold py-3.5 rounded-xl transition">Continue</button>
+                <p class="text-center text-sm text-slate-500">
+                    <span id="authToggleText">New here?</span>
+                    <button onclick="toggleAuthMode()" id="authToggleBtn" class="text-ink-600 font-bold hover:underline ml-1">Create an account</button>
+                </p>
+                <p id="authDemoNote" class="hidden text-center text-[11px] text-slate-400">Demo mode: no password needed — your account is saved on this device only.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ======================= CHECKOUT MODAL ======================= -->
+    <div id="checkoutModal" class="fixed inset-0 bg-black/60 z-[60] hidden items-center justify-center p-4">
+        <div class="bg-white rounded-2xl w-full max-w-md overflow-hidden fade-in">
+            <!-- Step 1: payment details -->
+            <div id="payStep1">
+                <div class="bg-zam-green text-white p-5">
+                    <h3 class="font-bold text-lg"><i class="fas fa-mobile-screen mr-2"></i>Enrol with Mobile Money</h3>
+                    <p class="text-emerald-100 text-sm mt-1"><span id="payCourseTitle"></span> · <b id="payTotal" class="text-white">K0.00</b></p>
+                </div>
+                <div class="p-5 space-y-4">
+                    <div>
+                        <label class="text-sm font-semibold text-slate-600 block mb-2">Choose your network</label>
+                        <div class="grid grid-cols-3 gap-2">
+                            <button onclick="selectProvider('mtn', this)" class="provider-btn border-2 rounded-xl p-3 text-center transition hover:border-ink-500">
+                                <div class="bg-yellow-400 text-black font-extrabold text-xs rounded-md py-1 mb-1">MTN</div>
+                                <span class="text-[11px] text-slate-500">MoMo</span>
+                            </button>
+                            <button onclick="selectProvider('airtel', this)" class="provider-btn border-2 rounded-xl p-3 text-center transition hover:border-ink-500">
+                                <div class="bg-red-600 text-white font-extrabold text-xs rounded-md py-1 mb-1">Airtel</div>
+                                <span class="text-[11px] text-slate-500">Money</span>
+                            </button>
+                            <button onclick="selectProvider('zamtel', this)" class="provider-btn border-2 rounded-xl p-3 text-center transition hover:border-ink-500">
+                                <div class="bg-green-700 text-white font-extrabold text-xs rounded-md py-1 mb-1">Zamtel</div>
+                                <span class="text-[11px] text-slate-500">Kwacha</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="text-sm font-semibold text-slate-600 block mb-2">Mobile money number</label>
+                        <div class="flex">
+                            <span class="bg-slate-100 border border-r-0 border-slate-300 rounded-l-xl px-3 flex items-center text-sm font-semibold text-slate-500">🇿🇲 +260</span>
+                            <input id="payPhone" type="tel" maxlength="9" placeholder="97 1234567"
+                                class="flex-1 border border-slate-300 rounded-r-xl px-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-zam-green"
+                                oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+                        </div>
+                    </div>
+                    <p id="payError" class="text-zam-red text-sm font-semibold hidden"></p>
+                    <button onclick="submitPayment()" class="w-full bg-zam-green hover:bg-green-800 text-white font-bold py-3.5 rounded-xl transition">
+                        Send payment request <i class="fas fa-arrow-right ml-1"></i>
+                    </button>
+                    <button onclick="closeCheckout()" class="w-full text-slate-400 text-sm py-1 hover:text-slate-600">Cancel</button>
+                </div>
+            </div>
+            <!-- Step 2: waiting -->
+            <div id="payStep2" class="hidden p-8 text-center">
+                <div class="w-20 h-20 mx-auto rounded-full bg-zam-green/10 flex items-center justify-center pulse-ring">
+                    <i class="fas fa-mobile-screen-button text-zam-green text-3xl"></i>
+                </div>
+                <h3 class="font-bold text-lg mt-5">Check your phone 📲</h3>
+                <p class="text-slate-500 text-sm mt-2">We sent a payment request of <b id="pay2Total" class="text-zam-green">K0.00</b> to <b id="pay2Phone"></b>.<br>Enter your Mobile Money PIN to approve.</p>
+                <p class="text-xs text-slate-400 mt-4"><span class="spinner inline-block !w-4 !h-4 !border-2 align-middle mr-1"></span> Waiting for confirmation...</p>
+            </div>
+            <!-- Step 3: success -->
+            <div id="payStep3" class="hidden p-8 text-center">
+                <div class="w-20 h-20 mx-auto rounded-full bg-zam-green flex items-center justify-center">
+                    <i class="fas fa-check text-white text-3xl"></i>
+                </div>
+                <h3 class="font-bold text-xl mt-5 text-zam-green">You're enrolled! 🎉</h3>
+                <p class="text-slate-500 text-sm mt-2">Payment confirmed for <b id="payDoneCourse"></b>.<br>Let's start learning.</p>
+                <button onclick="afterEnrol()" class="mt-6 w-full bg-ink-600 hover:bg-ink-700 text-white font-bold py-3 rounded-xl transition">Start the course</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ======================= TOAST ======================= -->
+    <div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-ink-900 text-white text-sm font-semibold px-5 py-3 rounded-full shadow-xl z-[90] hidden"></div>
+
+    <!-- ======================= INSTALL BANNER (mobile) ======================= -->
+    <div id="installBanner" class="hidden fixed bottom-0 left-0 right-0 z-40 bg-ink-900 text-white px-4 py-3 flex items-center gap-3 shadow-2xl">
+        <img src="icon-192.png" alt="" class="w-10 h-10 rounded-xl shrink-0">
+        <div class="flex-1 min-w-0">
+            <p class="font-bold text-sm leading-tight">Get the ORIZIS Academy App 🇿🇲</p>
+            <p class="text-[11px] text-ink-100/80 leading-tight">Learn from your home screen, anytime</p>
+        </div>
+        <button onclick="installApp()" class="shrink-0 bg-ink-600 hover:bg-ink-500 text-white text-xs font-extrabold px-4 py-2.5 rounded-full transition"><i class="fas fa-download mr-1"></i>INSTALL</button>
+        <button onclick="dismissInstall()" class="shrink-0 text-ink-100/70 hover:text-white p-1" aria-label="Dismiss"><i class="fas fa-xmark"></i></button>
+    </div>
+    <div id="installGuide" class="hidden fixed inset-0 z-[80] bg-black/80" onclick="closeInstallGuide()">
+        <div id="guideIos" class="hidden absolute inset-x-0 bottom-0 pb-20 px-6 text-white text-center">
+            <div class="bg-white text-slate-800 rounded-2xl p-5 max-w-sm mx-auto text-left" onclick="event.stopPropagation()">
+                <h4 class="font-extrabold text-lg">📲 Install on iPhone</h4>
+                <ol class="mt-3 space-y-2.5 text-sm">
+                    <li><b>1.</b> Tap the <b>Share</b> button <span class="inline-block border border-slate-300 rounded-md px-1.5 py-0.5 text-blue-500"><i class="fas fa-arrow-up-from-bracket"></i></span> at the <b>bottom of Safari</b></li>
+                    <li><b>2.</b> Scroll down and tap <b>"Add to Home Screen"</b> ➕</li>
+                    <li><b>3.</b> Tap <b>Add</b> — the Academy appears like an app!</li>
+                </ol>
+                <button onclick="closeInstallGuide()" class="mt-4 w-full bg-ink-100 hover:bg-ink-200 font-bold py-2.5 rounded-xl text-sm">Got it</button>
+            </div>
+            <div class="guide-arrow-down mx-auto mt-4 text-5xl">⬇️</div>
+        </div>
+        <div id="guideAndroid" class="hidden absolute inset-x-0 top-0 pt-16 px-6 text-white">
+            <div class="guide-arrow-up ml-auto mr-3 text-5xl w-fit">⬆️</div>
+            <div class="bg-white text-slate-800 rounded-2xl p-5 max-w-sm mx-auto mt-4" onclick="event.stopPropagation()">
+                <h4 class="font-extrabold text-lg">📲 Install on Android</h4>
+                <ol class="mt-3 space-y-2.5 text-sm">
+                    <li><b>1.</b> Tap the <b>⋮ menu</b> at the <b>top-right of Chrome</b></li>
+                    <li><b>2.</b> Tap <b>"Add to Home screen"</b> or <b>"Install app"</b></li>
+                    <li><b>3.</b> Confirm — the Academy appears like an app!</li>
+                </ol>
+                <button onclick="closeInstallGuide()" class="mt-4 w-full bg-ink-100 hover:bg-ink-200 font-bold py-2.5 rounded-xl text-sm">Got it</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Libraries: Firebase (optional), jsPDF (certificate), QRCode -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="config.js"></script>
+    <script src="courses-data.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

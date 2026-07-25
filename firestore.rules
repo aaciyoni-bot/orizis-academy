@@ -1,0 +1,60 @@
+rules_version = '2';
+
+// ORIZIS Academy — Firestore security rules
+// Deploy in Firebase Console -> Firestore Database -> Rules, or via the
+// Firebase CLI:  firebase deploy --only firestore:rules
+//
+// Data model:
+//   courses/{courseId}      - the catalog. Public read. No client writes
+//                             (managed from the Firebase console / an admin tool).
+//   enrollments/{uid_courseId} - one per learner per course. Owner only.
+//                             Holds paid ref, completed lessons and status.
+//   certificates/{certId}   - issued Certificates of Completion. PUBLIC read
+//                             (so verify.html can confirm a certificate), but
+//                             only creatable by the owner who completed the
+//                             course, and immutable once issued.
+//   users/{uid}             - optional learner profile. Owner only.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ---- Course catalog: readable by everyone, not writable by clients ----
+    match /courses/{courseId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // ---- Enrolments: strictly per-owner ----
+    match /enrollments/{enrollId} {
+      allow read: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow create: if request.auth != null
+                    && request.resource.data.userId == request.auth.uid;
+      allow update: if request.auth != null
+                    && resource.data.userId == request.auth.uid
+                    && request.resource.data.userId == request.auth.uid;
+      allow delete: if false;
+    }
+
+    // ---- Certificates: public verification, owner-issued, immutable ----
+    match /certificates/{certId} {
+      // Anyone can read a certificate to verify it (verify.html)
+      allow read: if true;
+
+      // Only the authenticated owner can issue their own certificate, and only
+      // if they have a COMPLETED enrolment for that course. This stops someone
+      // forging a certificate for a course they never finished.
+      allow create: if request.auth != null
+        && request.resource.data.userId == request.auth.uid
+        && exists(/databases/$(database)/documents/enrollments/$(request.auth.uid + '_' + request.resource.data.courseId))
+        && get(/databases/$(database)/documents/enrollments/$(request.auth.uid + '_' + request.resource.data.courseId)).data.status == 'completed';
+
+      // Certificates never change once issued
+      allow update, delete: if false;
+    }
+
+    // ---- Optional learner profile ----
+    match /users/{uid} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+    }
+  }
+}

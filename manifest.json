@@ -1,0 +1,16 @@
+{
+  "name": "ORIZIS Academy - Learn a Skill, Earn a Certificate",
+  "short_name": "ORIZIS Academy",
+  "description": "Affordable online courses for Zambia. Learn business, web, digital and job skills on your phone, pay with Mobile Money, and earn a Certificate of Completion.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0b1020",
+  "theme_color": "#4338ca",
+  "categories": ["education", "productivity"],
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
