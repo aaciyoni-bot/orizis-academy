@@ -13,13 +13,16 @@ window.OA_CONFIG = {
     // empty the Academy runs in DEMO mode using the browser's localStorage:
     // you can browse, enrol, learn, take the exam and generate a certificate,
     // but accounts and public certificate verification need Firebase.
+    // Shared "Zed Zambia" Firebase (project zedmall-4301c) — one backend for
+    // the whole ORIZIS Zambia family. Academy uses its own collections
+    // (enrollments, certificates). Rules are in zedtickets-site/firestore.rules.
     firebase: {
-        apiKey: "",
-        authDomain: "",
-        projectId: "",
-        storageBucket: "",
-        messagingSenderId: "",
-        appId: ""
+        apiKey: "AIzaSyAqkEfNwKZzofId0XCGcs17sVFh5NYryrM",
+        authDomain: "zedmall-4301c.firebaseapp.com",
+        projectId: "zedmall-4301c",
+        storageBucket: "zedmall-4301c.firebasestorage.app",
+        messagingSenderId: "24400915808",
+        appId: "1:24400915808:web:cd5675e846250c4e808205"
     },
 
     // Support (shown only in the Support section — no floating button).
