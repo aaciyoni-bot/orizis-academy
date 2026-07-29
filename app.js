@@ -45,12 +45,16 @@ const fieldOf = c => FIELDS[c && c.field] || FIELDS._default;
 /* ---------- State ---------- */
 let currentUser = null;          // { uid, name, email }
 let enrolledMap = {};            // courseId -> enrollment (cache for the signed-in user)
+let scholarshipMap = {};         // courseId -> scholarship grant (cache)
 let selectedProvider = null;
 let payCourse = null;
 let pendingEnrollCourse = null;
 let learnCourse = null, learnKey = null;
 let authMode = 'login';
 let payMethod = 'momo';           // 'momo' | 'vp'
+let payAmount = 0;                 // ZMW to charge for the current checkout
+let scholCourse = null;            // course being applied for a scholarship
+let pendingScholarshipCourse = null;
 
 /* ---------- Helpers ---------- */
 const fmtK = n => 'K' + Number(n || 0).toLocaleString('en-ZM', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -143,11 +147,12 @@ function renderLessonBody(text) {
 const enrollDocId = (uid, courseId) => uid + '_' + courseId;
 
 const Store = {
-    async createEnrollment(course, payRef) {
+    async createEnrollment(course, payRef, paidAmount) {
         const uid = currentUser.uid;
         const data = {
             userId: uid, courseId: course.id, courseTitle: course.title,
             level: course.level || '', priceZmw: course.priceZmw || 0,
+            paidZmw: paidAmount != null ? paidAmount : (course.priceZmw || 0),
             paidRef: payRef || '', completedLessons: [], status: 'active',
             createdAt: new Date().toISOString()
         };
@@ -159,15 +164,54 @@ const Store = {
         enrolledMap[course.id] = data;
         return data;
     },
+
+    // Scholarship application (owner-only). Records the applicant's info and
+    // marks the subsidised price as granted for this course.
+    async createScholarship(course, info) {
+        const uid = currentUser.uid;
+        const data = Object.assign({
+            userId: uid, courseId: course.id, courseTitle: course.title,
+            status: 'approved', fullPriceZmw: course.fullPriceZmw || 0,
+            grantedPriceZmw: course.priceZmw || 0, createdAt: new Date().toISOString()
+        }, info);
+        if (MODE === 'firebase') {
+            await db.collection('scholarships').doc(enrollDocId(uid, course.id)).set(data, { merge: true });
+        } else {
+            localStorage.setItem('oa_schol_' + uid + '_' + course.id, JSON.stringify(data));
+        }
+        scholarshipMap[course.id] = data;
+        return data;
+    },
+    async getScholarship(courseId) {
+        if (!currentUser) return null;
+        if (scholarshipMap[courseId]) return scholarshipMap[courseId];
+        const uid = currentUser.uid;
+        if (MODE === 'firebase') {
+            try {
+                const snap = await db.collection('scholarships').doc(enrollDocId(uid, courseId)).get();
+                const data = snap.exists ? snap.data() : null;
+                if (data) scholarshipMap[courseId] = data;
+                return data;
+            } catch (e) { return null; }
+        }
+        const raw = localStorage.getItem('oa_schol_' + uid + '_' + courseId);
+        const data = raw ? JSON.parse(raw) : null;
+        if (data) scholarshipMap[courseId] = data;
+        return data;
+    },
     async getEnrollment(courseId) {
         if (!currentUser) return null;
         if (enrolledMap[courseId]) return enrolledMap[courseId];
         const uid = currentUser.uid;
         if (MODE === 'firebase') {
-            const snap = await db.collection('enrollments').doc(enrollDocId(uid, courseId)).get();
-            const data = snap.exists ? snap.data() : null;
-            if (data) enrolledMap[courseId] = data;
-            return data;
+            // A non-existent doc trips the data-dependent read rule → permission-denied.
+            // Treat any read failure / missing doc as "not enrolled".
+            try {
+                const snap = await db.collection('enrollments').doc(enrollDocId(uid, courseId)).get();
+                const data = snap.exists ? snap.data() : null;
+                if (data) enrolledMap[courseId] = data;
+                return data;
+            } catch (e) { return null; }
         }
         const raw = localStorage.getItem('oa_enroll_' + uid + '_' + courseId);
         const data = raw ? JSON.parse(raw) : null;
@@ -275,7 +319,10 @@ function courseCard(c) {
             <h4 class="font-bold mt-1 leading-snug line-clamp-2 h-11">${esc(c.title)}</h4>
             <p class="text-xs text-slate-500 mt-1 line-clamp-2 h-8">${esc(c.summary || '')}</p>
             <div class="mt-3 flex items-center justify-between">
-                <span class="font-extrabold text-ink-700 text-lg">${fmtK(c.priceZmw)}</span>
+                <span class="flex items-baseline gap-1.5">
+                    <span class="font-extrabold text-ink-700 text-lg">${fmtK(c.priceZmw)}</span>
+                    ${c.fullPriceZmw && c.fullPriceZmw > c.priceZmw ? `<span class="text-xs text-slate-400 line-through">${fmtK(c.fullPriceZmw)}</span>` : ''}
+                </span>
                 <span class="text-ink-600 text-sm font-bold group-hover:underline">View <i class="fas fa-arrow-right text-xs"></i></span>
             </div>
         </div>
@@ -310,10 +357,20 @@ async function openCourse(id) {
     const e = currentUser ? await Store.getEnrollment(id) : null;
     const lessons = flatLessons(c);
     const done = e ? e.completedLessons.length : 0;
+    const isSchol = !!(c.scholarship && c.fullPriceZmw && c.fullPriceZmw > c.priceZmw);
+    const schol = (currentUser && isSchol && !e) ? await Store.getScholarship(id) : null;
 
     let cta;
     if (!e) {
-        cta = `<button onclick="OA.enroll('${c.id}')" class="w-full sm:w-auto bg-zam-green hover:bg-green-800 text-white font-bold px-8 py-3.5 rounded-xl transition"><i class="fas fa-mobile-screen mr-2"></i>Enrol — ${fmtK(c.priceZmw)}</button>`;
+        if (isSchol && !schol) {
+            cta = `<button onclick="OA.openScholarship('${c.id}')" class="w-full bg-zam-green hover:bg-green-800 text-white font-bold px-6 py-3.5 rounded-xl transition"><i class="fas fa-hand-holding-heart mr-2"></i>Apply for the scholarship</button>
+                <button onclick="OA.enroll('${c.id}','full')" class="w-full mt-2 text-slate-400 text-xs hover:text-slate-600 underline">or enrol at the full price ${fmtK(c.fullPriceZmw)}</button>`;
+        } else if (isSchol && schol) {
+            cta = `<div class="mb-2 text-xs font-bold text-zam-green"><i class="fas fa-circle-check mr-1"></i>Scholarship approved — your price is ${fmtK(c.priceZmw)}</div>
+                <button onclick="OA.enroll('${c.id}')" class="w-full bg-zam-green hover:bg-green-800 text-white font-bold px-8 py-3.5 rounded-xl transition"><i class="fas fa-mobile-screen mr-2"></i>Enrol — ${fmtK(c.priceZmw)}</button>`;
+        } else {
+            cta = `<button onclick="OA.enroll('${c.id}')" class="w-full sm:w-auto bg-zam-green hover:bg-green-800 text-white font-bold px-8 py-3.5 rounded-xl transition"><i class="fas fa-mobile-screen mr-2"></i>Enrol — ${fmtK(c.priceZmw)}</button>`;
+        }
     } else if (e.status === 'completed') {
         cta = `<div class="flex flex-wrap gap-3">
             <button onclick="OA.viewCertificateById('${e.certId}','${c.id}')" class="bg-gold text-ink-900 font-extrabold px-6 py-3.5 rounded-xl hover:brightness-105 transition"><i class="fas fa-award mr-2"></i>View certificate</button>
@@ -354,8 +411,13 @@ async function openCourse(id) {
 
             <div class="lg:col-span-1">
                 <div class="bg-white rounded-2xl border border-ink-100 shadow-sm p-5 lg:sticky lg:top-24">
-                    <div class="text-3xl font-extrabold text-ink-700">${fmtK(c.priceZmw)}</div>
-                    <p class="text-xs text-slate-400 mt-1">One-time payment · lifetime access</p>
+                    ${isSchol ? `
+                        <div class="flex items-baseline gap-2"><span class="text-3xl font-extrabold text-ink-700">${fmtK(c.priceZmw)}</span><span class="text-lg text-slate-400 line-through">${fmtK(c.fullPriceZmw)}</span></div>
+                        <div class="inline-flex items-center gap-1 mt-2 bg-gold/15 text-gold-deep text-[11px] font-bold px-2.5 py-1 rounded-full"><i class="fas fa-hand-holding-heart"></i> ORIZIS Community Scholarship price</div>
+                    ` : `
+                        <div class="text-3xl font-extrabold text-ink-700">${fmtK(c.priceZmw)}</div>
+                        <p class="text-xs text-slate-400 mt-1">One-time payment · lifetime access</p>
+                    `}
                     <div class="mt-4">${cta}</div>
                     <ul class="mt-5 space-y-2 text-sm text-slate-600">
                         <li><i class="fas fa-mobile-screen text-ink-500 w-5"></i> Pay with Mobile Money</li>
@@ -373,21 +435,23 @@ async function openCourse(id) {
 /* ================================================================
    ENROL / CHECKOUT
    ================================================================ */
-function enroll(courseId) {
+function enroll(courseId, mode) {
     const c = courseById(courseId);
     if (!c) return;
     if (!currentUser) { pendingEnrollCourse = courseId; openAuth('signup', 'Create an account to enrol'); return; }
-    openCheckout(c);
+    const amount = (mode === 'full' && c.fullPriceZmw) ? c.fullPriceZmw : c.priceZmw;
+    openCheckout(c, amount);
 }
 
-function openCheckout(course) {
+function openCheckout(course, amount) {
     payCourse = course;
+    payAmount = amount || course.priceZmw;
     selectedProvider = null;
     document.querySelectorAll('.provider-btn').forEach(b => b.classList.remove('selected'));
     $('payError').classList.add('hidden');
     $('payPhone').value = '';
     $('payCourseTitle').textContent = course.title;
-    $('payTotal').textContent = fmtK(course.priceZmw);
+    $('payTotal').textContent = fmtK(payAmount);
     $('payStep1').classList.remove('hidden');
     $('payStep2').classList.add('hidden');
     $('payStep3').classList.add('hidden');
@@ -424,7 +488,7 @@ function renderVpPanel() {
     if (!vpOn() || !payCourse) return;
     const st = window.VP.state();
     $('vpBalance').textContent = st.points;
-    const need = window.VP.pointsFor(payCourse.priceZmw);
+    const need = window.VP.pointsFor(payAmount || payCourse.priceZmw);
     $('vpCost').textContent = 'This course costs ' + need + ' pts';
     $('vpConnectWrap').classList.toggle('hidden', st.connected);
     $('vpPayBtn').classList.toggle('hidden', !st.connected);
@@ -443,9 +507,9 @@ async function submitPointsPayment() {
     btn.disabled = true; btn.innerHTML = '<span class="spinner inline-block !w-4 !h-4 !border-2 align-middle mr-2"></span> Paying…';
     try {
         const ref = 'OAENR-' + Math.floor(100000 + Math.random() * 900000);
-        const r = await window.VP.payPoints({ priceZmw: payCourse.priceZmw, reference: ref });
-        await Store.createEnrollment(payCourse, 'VP:' + (r.ref || ref));
-        window.VP.earn({ priceZmw: payCourse.priceZmw, reference: ref }); // best-effort loyalty
+        const r = await window.VP.payPoints({ priceZmw: payAmount, reference: ref });
+        await Store.createEnrollment(payCourse, 'VP:' + (r.ref || ref), payAmount);
+        window.VP.earn({ priceZmw: payAmount, reference: ref }); // best-effort loyalty
         $('payDoneCourse').textContent = payCourse.title;
         $('payStep1').classList.add('hidden');
         $('payStep3').classList.remove('hidden');
@@ -518,7 +582,7 @@ async function submitPayment() {
     if (!/^(9|7)\d{8}$/.test(phone)) { err.textContent = 'Enter a valid Zambian number, e.g. 971234567.'; err.classList.remove('hidden'); return; }
     err.classList.add('hidden');
 
-    const order = { provider: selectedProvider, phone, total: payCourse.priceZmw, courseTitle: payCourse.title };
+    const order = { provider: selectedProvider, phone, total: payAmount, courseTitle: payCourse.title };
     $('pay2Total').textContent = fmtK(order.total);
     $('pay2Phone').textContent = '+260 ' + phone;
     $('payStep1').classList.add('hidden');
@@ -536,7 +600,7 @@ async function submitPayment() {
 
     const ref = (outcome && outcome.ref) ? outcome.ref : 'SIM-' + Math.floor(100000 + Math.random() * 900000);
     try {
-        await Store.createEnrollment(payCourse, ref);
+        await Store.createEnrollment(payCourse, ref, payAmount);
     } catch (e) {
         console.error(e);
         $('payStep2').classList.add('hidden');
@@ -545,7 +609,7 @@ async function submitPayment() {
         err.classList.remove('hidden');
         return;
     }
-    if (window.VP && window.VP.isOn()) window.VP.earn({ priceZmw: payCourse.priceZmw, reference: ref }); // loyalty, best-effort
+    if (window.VP && window.VP.isOn()) window.VP.earn({ priceZmw: payAmount, reference: ref }); // loyalty, best-effort
     $('payDoneCourse').textContent = payCourse.title;
     $('payStep2').classList.add('hidden');
     $('payStep3').classList.remove('hidden');
@@ -555,6 +619,74 @@ function afterEnrol() {
     const id = payCourse.id;
     closeCheckout();
     openLearn(id);
+}
+
+/* ================================================================
+   SCHOLARSHIP (subsidised price) — collects light info, no sensitive ID data
+   ================================================================ */
+function openScholarship(courseId) {
+    const c = courseById(courseId);
+    if (!c) return;
+    if (!currentUser) { pendingScholarshipCourse = courseId; openAuth('signup', 'Create an account to apply'); return; }
+    scholCourse = c;
+    $('scholPriceNote').innerHTML = 'Full price <span class="line-through opacity-70">' + fmtK(c.fullPriceZmw) + '</span> → your price <b class="text-gold-soft">' + fmtK(c.priceZmw) + '</b>';
+    ['scholName', 'scholPhone', 'scholAge', 'scholEmail', 'scholTown', 'scholMotivation'].forEach(id => { if ($(id)) $(id).value = ''; });
+    if ($('scholEmploy')) $('scholEmploy').value = '';
+    if ($('scholConsent')) $('scholConsent').checked = false;
+    if (currentUser.email && $('scholEmail')) $('scholEmail').value = currentUser.email;
+    if (currentUser.name && $('scholName')) $('scholName').value = currentUser.name;
+    $('scholError').classList.add('hidden');
+    $('scholStep1').classList.remove('hidden');
+    $('scholStep2').classList.add('hidden');
+    $('scholStep3').classList.add('hidden');
+    $('scholarshipModal').classList.remove('hidden');
+    $('scholarshipModal').classList.add('flex');
+}
+function closeScholarship() {
+    $('scholarshipModal').classList.add('hidden');
+    $('scholarshipModal').classList.remove('flex');
+}
+async function submitScholarship() {
+    const err = $('scholError');
+    err.classList.add('hidden');
+    const info = {
+        fullName: $('scholName').value.trim(),
+        phone: $('scholPhone').value.trim(),
+        email: $('scholEmail').value.trim(),
+        age: parseInt($('scholAge').value) || null,
+        town: $('scholTown').value.trim(),
+        employment: $('scholEmploy').value,
+        motivation: $('scholMotivation').value.trim()
+    };
+    if (info.fullName.length < 3) { err.textContent = 'Please enter your full name.'; err.classList.remove('hidden'); return; }
+    if (!/^(9|7)\d{8}$/.test(info.phone.replace(/\D/g, '').replace(/^260/, ''))) { err.textContent = 'Please enter a valid Zambian phone number.'; err.classList.remove('hidden'); return; }
+    if (!info.age || info.age < 14) { err.textContent = 'Please enter your age.'; err.classList.remove('hidden'); return; }
+    if (!info.town) { err.textContent = 'Please enter your town or city.'; err.classList.remove('hidden'); return; }
+    if (!info.employment) { err.textContent = 'Please select your current situation.'; err.classList.remove('hidden'); return; }
+    if (info.motivation.length < 5) { err.textContent = 'Please tell us why you want the course.'; err.classList.remove('hidden'); return; }
+    if (!$('scholConsent').checked) { err.textContent = 'Please tick the consent box to continue.'; err.classList.remove('hidden'); return; }
+
+    $('scholStep1').classList.add('hidden');
+    $('scholStep2').classList.remove('hidden');
+    try {
+        await Store.createScholarship(scholCourse, info);
+    } catch (e) {
+        console.error('Scholarship save failed:', e);
+        $('scholStep2').classList.add('hidden');
+        $('scholStep1').classList.remove('hidden');
+        err.textContent = 'Could not submit your application. Please try again.';
+        err.classList.remove('hidden');
+        return;
+    }
+    await new Promise(r => setTimeout(r, 3500)); // brief, honest "review" moment
+    $('scholGrantedPrice').textContent = fmtK(scholCourse.priceZmw);
+    $('scholStep2').classList.add('hidden');
+    $('scholStep3').classList.remove('hidden');
+}
+function scholarshipContinue() {
+    const c = scholCourse;
+    closeScholarship();
+    openCheckout(c, c.priceZmw);
 }
 
 /* ================================================================
@@ -1123,23 +1255,26 @@ function friendlyAuthError(e) {
 
 async function onSignedIn(user) {
     currentUser = user;
-    enrolledMap = {};
+    enrolledMap = {}; scholarshipMap = {};
     updateAccountUi();
     closeAuth();
     // Preload enrolments for badges
     try { (await Store.listEnrollments()).forEach(e => { enrolledMap[e.courseId] = e; }); } catch (e) {}
     renderCatalog();
     showToast('Welcome, ' + (user.name || 'learner') + '! 👋');
-    if (pendingEnrollCourse) {
+    if (pendingScholarshipCourse) {
+        const id = pendingScholarshipCourse; pendingScholarshipCourse = null;
+        openScholarship(id);
+    } else if (pendingEnrollCourse) {
         const id = pendingEnrollCourse; pendingEnrollCourse = null;
-        const c = courseById(id); if (c) openCheckout(c);
+        const c = courseById(id); if (c) openCheckout(c, c.priceZmw);
     }
 }
 
 function doSignOut() {
     toggleAccountMenu(false);
     if (MODE === 'firebase') { auth.signOut(); }
-    else { localStorage.removeItem('oa_local_user'); currentUser = null; enrolledMap = {}; updateAccountUi(); renderCatalog(); }
+    else { localStorage.removeItem('oa_local_user'); currentUser = null; enrolledMap = {}; scholarshipMap = {}; updateAccountUi(); renderCatalog(); }
     showToast('Logged out.');
     goHome();
 }
@@ -1212,6 +1347,9 @@ if (IS_MOBILE && !IS_INSTALLED) setTimeout(showInstallBanner, 3500);
 function boot() {
     renderCatalog();
     showView('catalogView');
+    // Deep link from the syllabus page: index.html?c=<courseId>
+    const deepCourse = new URLSearchParams(location.search).get('c');
+    if (deepCourse && courseById(deepCourse)) openCourse(deepCourse);
     // VeriPoints plugin — safe no-op unless enabled & configured
     if (window.VP) {
         window.VP.onState(refreshVpChip);
@@ -1220,7 +1358,7 @@ function boot() {
     if (MODE === 'firebase') {
         auth.onAuthStateChanged(u => {
             if (u) onSignedIn({ uid: u.uid, name: u.displayName || (u.email ? u.email.split('@')[0] : 'Learner'), email: u.email });
-            else { currentUser = null; enrolledMap = {}; updateAccountUi(); }
+            else { currentUser = null; enrolledMap = {}; scholarshipMap = {}; updateAccountUi(); }
         });
     } else {
         const gw = document.getElementById('googleWrap'); if (gw) gw.style.display = 'none'; // demo mode: no Google popup
@@ -1233,8 +1371,9 @@ function boot() {
 window.OA = {
     openCourse, enroll, openLearn, gotoLesson, prevLesson, completeCurrent,
     startExam, submitExam, submitCapstone, downloadCert, viewCertificateById, showMyLearning,
-    filterField, goHome
+    filterField, goHome, openScholarship
 };
+window.openScholarship = openScholarship; window.closeScholarship = closeScholarship; window.submitScholarship = submitScholarship; window.scholarshipContinue = scholarshipContinue;
 // A few handlers used directly in HTML attributes:
 window.goHome = goHome; window.doSearch = doSearch; window.scrollToCatalog = scrollToCatalog;
 window.onAccountClick = onAccountClick; window.toggleAccountMenu = toggleAccountMenu;

@@ -365,6 +365,7 @@
                 <ul class="space-y-2 text-ink-100/60">
                     <li><a href="#" onclick="goHome();return false;" class="hover:text-white transition">All courses</a></li>
                     <li><a href="#how-it-works" class="hover:text-white transition">How it works</a></li>
+                    <li><a href="syllabus.html" class="hover:text-white transition">Course syllabus</a></li>
                     <li><a href="#builder" class="hover:text-white transition">Builder Network</a></li>
                     <li><a href="#faq" class="hover:text-white transition">FAQ</a></li>
                     <li><a href="verify.html" class="hover:text-white transition">Verify a certificate</a></li>
@@ -511,6 +512,81 @@
                 <h3 class="font-bold text-xl mt-5 text-zam-green">You're enrolled! 🎉</h3>
                 <p class="text-slate-500 text-sm mt-2">Payment confirmed for <b id="payDoneCourse"></b>.<br>Let's start learning.</p>
                 <button onclick="afterEnrol()" class="mt-6 w-full bg-ink-600 hover:bg-ink-700 text-white font-bold py-3 rounded-xl transition">Start the course</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ======================= SCHOLARSHIP MODAL ======================= -->
+    <div id="scholarshipModal" class="fixed inset-0 bg-black/60 z-[60] hidden items-center justify-center p-4" onclick="if(event.target===this) closeScholarship()">
+        <div class="bg-white rounded-2xl w-full max-w-md overflow-hidden fade-in max-h-[92vh] overflow-y-auto">
+            <!-- Step 1: application -->
+            <div id="scholStep1">
+                <div class="bg-gradient-to-br from-ink-700 to-ink-900 text-white p-5">
+                    <h3 class="font-bold text-lg"><i class="fas fa-hand-holding-heart mr-2 text-gold-soft"></i>ORIZIS Community Scholarship</h3>
+                    <p class="text-ink-100/80 text-sm mt-1" id="scholPriceNote"></p>
+                </div>
+                <div class="p-5 space-y-3">
+                    <p class="text-xs text-slate-500">Our community scholarship makes this programme affordable. Tell us a little about you — most applicants are approved within minutes.</p>
+                    <div>
+                        <label class="text-xs font-semibold text-slate-600 block mb-1">Full name</label>
+                        <input id="scholName" type="text" placeholder="e.g. Chanda Mwansa" class="w-full border border-slate-300 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ink-500">
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="text-xs font-semibold text-slate-600 block mb-1">Phone / WhatsApp</label>
+                            <input id="scholPhone" type="tel" placeholder="09..." class="w-full border border-slate-300 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ink-500">
+                        </div>
+                        <div>
+                            <label class="text-xs font-semibold text-slate-600 block mb-1">Age</label>
+                            <input id="scholAge" type="number" min="14" max="99" placeholder="e.g. 24" class="w-full border border-slate-300 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ink-500">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="text-xs font-semibold text-slate-600 block mb-1">Email</label>
+                        <input id="scholEmail" type="email" placeholder="you@email.com" class="w-full border border-slate-300 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ink-500">
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="text-xs font-semibold text-slate-600 block mb-1">Town / City</label>
+                            <input id="scholTown" type="text" placeholder="e.g. Lusaka" class="w-full border border-slate-300 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ink-500">
+                        </div>
+                        <div>
+                            <label class="text-xs font-semibold text-slate-600 block mb-1">Current situation</label>
+                            <select id="scholEmploy" class="w-full border border-slate-300 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ink-500 bg-white">
+                                <option value="">Select…</option>
+                                <option>Student</option>
+                                <option>Employed</option>
+                                <option>Self-employed</option>
+                                <option>Unemployed</option>
+                                <option>Other</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="text-xs font-semibold text-slate-600 block mb-1">Why do you want this course? (your goal)</label>
+                        <textarea id="scholMotivation" rows="2" placeholder="e.g. I want to build websites and earn an income from home." class="w-full border border-slate-300 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ink-500"></textarea>
+                    </div>
+                    <label class="flex items-start gap-2 text-xs text-slate-500">
+                        <input id="scholConsent" type="checkbox" class="accent-ink-600 mt-0.5">
+                        <span>I agree that ORIZIS Academy may store the details above to process my scholarship. <a href="privacy.html" target="_blank" class="text-ink-600 underline">Privacy</a></span>
+                    </label>
+                    <p id="scholError" class="text-zam-red text-sm font-semibold hidden"></p>
+                    <button onclick="submitScholarship()" class="w-full bg-zam-green hover:bg-green-800 text-white font-bold py-3 rounded-xl transition">Submit application</button>
+                    <button onclick="closeScholarship()" class="w-full text-slate-400 text-sm py-1 hover:text-slate-600">Cancel</button>
+                </div>
+            </div>
+            <!-- Step 2: reviewing -->
+            <div id="scholStep2" class="hidden p-8 text-center">
+                <div class="w-20 h-20 mx-auto rounded-full bg-ink-50 flex items-center justify-center"><div class="spinner"></div></div>
+                <h3 class="font-bold text-lg mt-5">Reviewing your application…</h3>
+                <p class="text-slate-500 text-sm mt-2">This usually takes just a moment. Please don't close this window.</p>
+            </div>
+            <!-- Step 3: approved -->
+            <div id="scholStep3" class="hidden p-8 text-center">
+                <div class="w-20 h-20 mx-auto rounded-full bg-zam-green flex items-center justify-center"><i class="fas fa-check text-white text-3xl"></i></div>
+                <h3 class="font-bold text-xl mt-5 text-zam-green">Scholarship approved! 🎉</h3>
+                <p class="text-slate-500 text-sm mt-2">Your subsidised price is <b id="scholGrantedPrice" class="text-ink-700"></b>. Continue to enrol with Mobile Money.</p>
+                <button onclick="scholarshipContinue()" class="mt-6 w-full bg-zam-green hover:bg-green-800 text-white font-bold py-3 rounded-xl transition"><i class="fas fa-mobile-screen mr-2"></i>Continue to enrol</button>
             </div>
         </div>
     </div>

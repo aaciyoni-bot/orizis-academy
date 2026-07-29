@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Course Syllabus — ORIZIS Academy 🎓</title>
+    <meta name="description" content="Full syllabus for every ORIZIS Academy course. Learn a real profession — build websites for a living — with a path to apply for paid work at ORIZIS Technology, an international company.">
+    <meta name="theme-color" content="#4338ca">
+    <link rel="icon" type="image/png" href="icon-192.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Playfair+Display:wght@700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = { theme: { extend: {
+            colors: { ink: { 50:'#eef2ff',100:'#e0e7ff',200:'#c7d2fe',300:'#a5b4fc',400:'#818cf8',500:'#6366f1',600:'#4f46e5',700:'#4338ca',800:'#3730a3',900:'#312e81' }, gold:{ DEFAULT:'#e3ae4e', soft:'#f4d58d', deep:'#b8862f' }, zam:{ green:'#198a00', red:'#de2010' } },
+            fontFamily: { sans:['Inter','sans-serif'], display:['"Playfair Display"','serif'] }
+        } } }
+    </script>
+    <style>
+        .syl summary { cursor: pointer; list-style: none; }
+        .syl summary::-webkit-details-marker { display: none; }
+        .syl .chev { transition: transform .2s; }
+        .syl[open] .chev { transform: rotate(180deg); }
+        .no-scrollbar::-webkit-scrollbar { display:none; }
+    </style>
+</head>
+<body class="bg-ink-50 font-sans text-slate-800 min-h-screen">
+
+    <!-- Header -->
+    <header class="bg-white shadow-sm sticky top-0 z-40">
+        <div class="max-w-6xl mx-auto px-4 py-3 flex items-center gap-3">
+            <a href="index.html" class="flex items-center gap-2">
+                <div class="bg-gradient-to-br from-ink-600 to-ink-800 text-white w-10 h-10 rounded-xl flex items-center justify-center text-lg shadow-md"><i class="fas fa-graduation-cap"></i></div>
+                <div><h1 class="text-lg font-display font-extrabold leading-none">ORIZIS <span class="text-ink-600">Academy</span></h1>
+                <p class="text-[10px] text-slate-400 leading-none mt-0.5">Course syllabus</p></div>
+            </a>
+            <a href="index.html" class="ml-auto bg-ink-600 hover:bg-ink-700 text-white text-sm font-bold px-4 py-2 rounded-full transition"><i class="fas fa-graduation-cap mr-1"></i> Browse &amp; enrol</a>
+        </div>
+    </header>
+
+    <!-- Flagship hero -->
+    <section id="flagship" class="relative overflow-hidden bg-ink-900 text-white">
+        <div class="absolute inset-0 bg-gradient-to-br from-ink-700 via-ink-900 to-[#0b1020]"></div>
+        <div class="absolute -top-24 -right-24 w-96 h-96 bg-ink-500/30 rounded-full blur-3xl"></div>
+        <div class="absolute -bottom-32 -left-20 w-96 h-96 bg-gold/20 rounded-full blur-3xl"></div>
+        <div id="flagshipInner" class="relative max-w-6xl mx-auto px-4 py-14 sm:py-16"></div>
+    </section>
+
+    <!-- All courses -->
+    <main class="max-w-6xl mx-auto px-4 py-12">
+        <div class="text-center mb-8">
+            <h2 class="text-2xl sm:text-3xl font-display font-extrabold">Every course, in full</h2>
+            <p class="text-slate-500 mt-2">Tap any course to open its complete syllabus — modules, lessons and the final assessment.</p>
+        </div>
+        <div id="tracks" class="space-y-10"></div>
+    </main>
+
+    <footer class="bg-[#0b1020] text-ink-100/60 mt-8">
+        <div class="max-w-6xl mx-auto px-4 py-8 text-sm text-center">
+            <p>ORIZIS Academy issues <b>Certificates of Completion</b> — not government- or TEVETA-accredited qualifications.</p>
+            <p class="mt-2 text-ink-100/40 text-xs">© 2026 ORIZIS Academy · an ORIZIS TECHNOLOGY brand · <a href="index.html" class="underline hover:text-white">Back to courses</a></p>
+        </div>
+    </footer>
+
+    <script src="config.js"></script>
+    <script src="courses-data.js"></script>
+    <script>
+    (function () {
+        const COURSES = Array.isArray(window.COURSES) ? window.COURSES : [];
+        const FLAGSHIP_ID = 'build-with-claude';
+        const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, m => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));
+        const fmtK = n => 'K' + Number(n || 0).toLocaleString('en-ZM', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+
+        const FIELDS = {
+            business:{label:'Business & Entrepreneurship',icon:'fa-briefcase',grad:'from-ink-500 to-violet-700'},
+            web:{label:'Web & Building',icon:'fa-code',grad:'from-blue-500 to-ink-700'},
+            marketing:{label:'Digital Marketing',icon:'fa-bullhorn',grad:'from-fuchsia-500 to-purple-700'},
+            money:{label:'Earn Online',icon:'fa-money-bill-trend-up',grad:'from-emerald-500 to-teal-700'},
+            commerce:{label:'Commerce & Mobile Money',icon:'fa-store',grad:'from-amber-500 to-orange-600'},
+            computer:{label:'Computer & Digital',icon:'fa-laptop',grad:'from-sky-500 to-blue-700'},
+            english:{label:'English',icon:'fa-language',grad:'from-rose-500 to-pink-700'},
+            service:{label:'Customer Service',icon:'fa-headset',grad:'from-cyan-500 to-sky-700'},
+            career:{label:'CV & Career',icon:'fa-file-lines',grad:'from-slate-500 to-ink-700'},
+            finance:{label:'Finance',icon:'fa-calculator',grad:'from-green-500 to-emerald-700'},
+            agriculture:{label:'Agriculture',icon:'fa-seedling',grad:'from-lime-500 to-green-700'},
+            tailoring:{label:'Tailoring & Fashion',icon:'fa-scissors',grad:'from-pink-500 to-rose-700'},
+            beauty:{label:'Beauty',icon:'fa-wand-magic-sparkles',grad:'from-purple-500 to-fuchsia-700'},
+            _default:{label:'Course',icon:'fa-book',grad:'from-ink-500 to-ink-700'}
+        };
+        const fieldOf = c => FIELDS[c && c.field] || FIELDS._default;
+        const lessonCount = c => (c.modules || []).reduce((s, m) => s + (m.lessons || []).length, 0);
+        const enrolHref = id => 'index.html?c=' + encodeURIComponent(id);
+
+        function moduleListHtml(c) {
+            return (c.modules || []).map((m, mi) => `
+                <div class="mb-4">
+                    <div class="font-bold text-ink-800 text-sm mb-1.5"><i class="fas fa-layer-group text-ink-400 mr-1.5"></i>${esc(m.title)}</div>
+                    <ol class="space-y-1">
+                        ${(m.lessons || []).map((l, li) => `<li class="flex items-baseline gap-2 text-sm text-slate-600">
+                            <span class="text-ink-400 font-mono text-xs shrink-0">${mi + 1}.${li + 1}</span>
+                            <span class="flex-1">${esc(l.title)}</span>
+                            <span class="text-xs text-slate-400 shrink-0">${l.minutes || 0} min</span></li>`).join('')}
+                    </ol>
+                </div>`).join('');
+        }
+        function capstoneHtml(c) {
+            if (!c.capstone) return '';
+            return `<div class="mt-3 bg-gold/10 border border-gold/40 rounded-xl p-4">
+                <div class="font-bold text-ink-800 text-sm"><i class="fas fa-user-tie text-gold-deep mr-1.5"></i>Final project — present your website to the virtual mentor</div>
+                <p class="text-sm text-slate-600 mt-1">Build and publish a real website, then submit its live link for review. Passing earns your Certificate of Completion and your first portfolio piece.</p>
+            </div>`;
+        }
+        function outcomesHtml(c) {
+            if (!(c.outcomes || []).length) return '';
+            return `<div class="mb-4"><div class="font-bold text-sm mb-1.5">What you'll be able to do</div>
+                <div class="grid sm:grid-cols-2 gap-1.5">
+                    ${c.outcomes.map(o => `<div class="flex items-start gap-2 text-sm text-slate-600"><i class="fas fa-circle-check text-zam-green mt-0.5"></i><span>${esc(o)}</span></div>`).join('')}
+                </div></div>`;
+        }
+
+        // ---- Flagship hero ----
+        const flag = COURSES.find(c => c.id === FLAGSHIP_ID);
+        if (flag) {
+            const f = fieldOf(flag);
+            document.getElementById('flagshipInner').innerHTML = `
+                <span class="inline-flex items-center gap-1.5 bg-gold/20 text-gold-soft text-xs font-bold px-3 py-1.5 rounded-full border border-gold/30 uppercase tracking-wide"><i class="fas fa-star"></i> Flagship program</span>
+                <h2 class="mt-4 text-3xl sm:text-5xl font-display font-extrabold leading-tight max-w-3xl">Learn a <span class="bg-gradient-to-r from-gold-soft to-white bg-clip-text text-transparent">real profession</span>:<br>build websites for a living 🇿🇲</h2>
+                <p class="mt-4 text-ink-100/90 text-base sm:text-lg max-w-2xl">${esc(flag.summary)}</p>
+
+                <div class="mt-6 grid sm:grid-cols-3 gap-3 max-w-2xl">
+                    <div class="bg-white/5 border border-white/10 rounded-xl p-3 text-center"><div class="text-2xl font-extrabold text-gold-soft">${lessonCount(flag)}</div><div class="text-xs text-ink-100/70">lessons</div></div>
+                    <div class="bg-white/5 border border-white/10 rounded-xl p-3 text-center"><div class="text-2xl font-extrabold text-gold-soft">~${flag.hours || 3}h</div><div class="text-xs text-ink-100/70">of learning</div></div>
+                    <div class="bg-white/5 border border-white/10 rounded-xl p-3 text-center"><div class="text-2xl font-extrabold text-gold-soft">${fmtK(flag.priceZmw)}${flag.fullPriceZmw && flag.fullPriceZmw > flag.priceZmw ? ' <span class="text-sm font-normal text-ink-100/50 line-through">' + fmtK(flag.fullPriceZmw) + '</span>' : ''}</div><div class="text-xs text-ink-100/70">${flag.fullPriceZmw && flag.fullPriceZmw > flag.priceZmw ? 'with scholarship' : 'one-time'}</div></div>
+                </div>
+
+                <div class="mt-6 bg-white/5 border border-white/10 rounded-2xl p-5 max-w-3xl">
+                    <div class="flex items-center gap-2 text-gold-soft font-bold"><i class="fas fa-briefcase"></i> A real path to work with ORIZIS Technology</div>
+                    <p class="mt-2 text-ink-100/85 text-sm">ORIZIS Technology is an international company. Finish this program, build your portfolio project, and you can <b>apply to the ORIZIS Builder Network</b> for real, paid project work.</p>
+                    <p class="mt-1 text-ink-100/50 text-xs">An opportunity to apply for paid projects, based on your skills and portfolio — not a guarantee of employment.</p>
+                </div>
+
+                <div class="mt-6 flex flex-wrap gap-3">
+                    <a href="${enrolHref(flag.id)}" class="bg-gold text-ink-900 font-extrabold px-7 py-3.5 rounded-full hover:brightness-105 transition"><i class="fas fa-graduation-cap mr-1"></i> Enrol — ${fmtK(flag.priceZmw)}</a>
+                    <a href="#flagship-syllabus" class="inline-flex items-center text-sm font-bold text-white/90 hover:text-white underline underline-offset-4 px-2">See full syllabus ↓</a>
+                </div>
+
+                <div id="flagship-syllabus" class="mt-8 bg-white text-slate-800 rounded-2xl p-5 sm:p-7 max-w-3xl">
+                    <h3 class="font-display font-extrabold text-xl mb-4"><i class="fas ${f.icon} text-ink-600 mr-1.5"></i>Full syllabus</h3>
+                    ${outcomesHtml(flag)}
+                    ${moduleListHtml(flag)}
+                    ${capstoneHtml(flag)}
+                </div>`;
+        }
+
+        // ---- All other courses, grouped by track ----
+        const TRACKS = [
+            { title: 'Builder Track — Web & AI', icon: 'fa-code', blurb: 'Build websites and web apps with AI, and grow toward paid work.', fields: ['web'] },
+            { title: 'Earn Online', icon: 'fa-money-bill-trend-up', blurb: 'Freelancing, digital marketing and building a personal brand.', fields: ['money', 'marketing'] },
+            { title: 'Commerce & Mobile Money', icon: 'fa-store', blurb: 'Sell online and run the money side of a small business.', fields: ['commerce', 'finance'] },
+            { title: 'Jobs, Skills & Trades', icon: 'fa-briefcase', blurb: 'Employability skills and practical, income-earning trades.', fields: ['english', 'career', 'service', 'computer', 'business', 'agriculture', 'tailoring', 'beauty'] }
+        ];
+
+        function courseSyllabusCard(c) {
+            const f = fieldOf(c);
+            return `<details class="syl bg-white rounded-2xl border border-ink-100 shadow-sm overflow-hidden">
+                <summary class="p-4 flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-xl bg-gradient-to-br ${f.grad} flex items-center justify-center shrink-0"><i class="fas ${f.icon} text-white text-xl"></i></div>
+                    <div class="flex-1 min-w-0">
+                        <h4 class="font-bold leading-snug">${esc(c.title)}</h4>
+                        <div class="text-xs text-slate-400 mt-0.5">${esc(c.level || 'Course')} · ${lessonCount(c)} lessons · ~${c.hours || 1}h · <span class="text-ink-600 font-bold">${fmtK(c.priceZmw)}</span>${c.fullPriceZmw && c.fullPriceZmw > c.priceZmw ? ' <span class="line-through">' + fmtK(c.fullPriceZmw) + '</span>' : ''}</div>
+                    </div>
+                    <i class="fas fa-chevron-down chev text-slate-400 shrink-0"></i>
+                </summary>
+                <div class="px-5 pb-5 pt-1 border-t border-slate-100">
+                    <p class="text-sm text-slate-500 my-3">${esc(c.summary || '')}</p>
+                    ${outcomesHtml(c)}
+                    ${moduleListHtml(c)}
+                    ${capstoneHtml(c)}
+                    <a href="${enrolHref(c.id)}" class="inline-flex items-center gap-1.5 mt-2 bg-ink-600 hover:bg-ink-700 text-white text-sm font-bold px-5 py-2.5 rounded-xl transition"><i class="fas fa-graduation-cap"></i> Enrol — ${fmtK(c.priceZmw)}</a>
+                </div>
+            </details>`;
+        }
+
+        const used = new Set([FLAGSHIP_ID]);
+        const tracksHtml = TRACKS.map(t => {
+            const list = COURSES.filter(c => !used.has(c.id) && t.fields.includes(c.field));
+            list.forEach(c => used.add(c.id));
+            if (!list.length) return '';
+            return `<section>
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="w-10 h-10 rounded-xl bg-ink-100 text-ink-700 flex items-center justify-center"><i class="fas ${t.icon}"></i></div>
+                    <div><h3 class="text-xl font-display font-extrabold">${esc(t.title)}</h3><p class="text-sm text-slate-500">${esc(t.blurb)} · ${list.length} courses</p></div>
+                </div>
+                <div class="space-y-3">${list.map(courseSyllabusCard).join('')}</div>
+            </section>`;
+        }).join('');
+
+        // Any leftover courses not matched by a track
+        const leftover = COURSES.filter(c => !used.has(c.id));
+        const leftoverHtml = leftover.length ? `<section>
+            <h3 class="text-xl font-display font-extrabold mb-4">More courses</h3>
+            <div class="space-y-3">${leftover.map(courseSyllabusCard).join('')}</div></section>` : '';
+
+        document.getElementById('tracks').innerHTML = tracksHtml + leftoverHtml;
+    })();
+    </script>
+</body>
+</html>
