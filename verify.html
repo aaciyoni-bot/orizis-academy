@@ -3,16 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Verify a Certificate — ORIZIS Academy</title>
-    <meta name="description" content="Verify the authenticity of an ORIZIS Academy Certificate of Completion using its verification code.">
-    <meta name="theme-color" content="#4338ca">
+    <title>Verify a Certificate — Lernoto</title>
+    <meta name="description" content="Verify the authenticity of an Lernoto Certificate of Completion using its verification code.">
+    <meta name="theme-color" content="#141d39">
     <link rel="icon" type="image/png" href="icon-192.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Playfair+Display:wght@700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script>
         tailwind.config = { theme: { extend: {
-            colors: { ink: { 50:'#eef2ff',100:'#e0e7ff',200:'#c7d2fe',500:'#6366f1',600:'#4f46e5',700:'#4338ca',800:'#3730a3',900:'#312e81' }, gold:{ DEFAULT:'#e3ae4e', soft:'#f4d58d' }, zam:{ green:'#198a00', red:'#de2010' } },
+            colors: { ink: { 50:'#f3f6fc',100:'#e3e9f7',200:'#c5d0ec',500:'#4b63ab',600:'#374c8c',700:'#2b3b6e',800:'#1f2c53',900:'#141d39' }, gold:{ DEFAULT:'#a8d33d', soft:'#cbe888' }, zam:{ green:'#198a00', red:'#de2010' } },
             fontFamily: { sans:['Inter','sans-serif'], display:['"Playfair Display"','serif'] }
         } } }
     </script>
@@ -35,7 +35,7 @@
 
     <main class="flex-1 max-w-2xl w-full mx-auto px-4 py-10">
         <h2 class="text-2xl sm:text-3xl font-display font-extrabold text-center">Verify a Certificate</h2>
-        <p class="text-center text-slate-500 mt-2">Enter the verification code from an ORIZIS Academy certificate to confirm it is genuine.</p>
+        <p class="text-center text-slate-500 mt-2">Enter the verification code from an Lernoto certificate to confirm it is genuine.</p>
 
         <div class="mt-6 flex gap-2 max-w-md mx-auto">
             <input id="codeInput" type="text" placeholder="e.g. OA-AB12C-XY9Z"
@@ -48,7 +48,7 @@
     </main>
 
     <footer class="bg-[#0b1020] text-ink-100/50 text-center py-4 text-xs">
-        © 2026 ORIZIS Academy · an ORIZIS TECHNOLOGY brand · <a href="index.html" class="hover:text-white underline">Back to courses</a>
+        © 2026 Lernoto · an ORIZIS TECHNOLOGY brand · <a href="index.html" class="hover:text-white underline">Back to courses</a>
     </footer>
 
     <script>
@@ -75,7 +75,7 @@
             <div class="bg-white rounded-2xl border-2 border-zam-green shadow-sm overflow-hidden fade-in">
                 <div class="bg-zam-green text-white px-6 py-4 flex items-center gap-3">
                     <i class="fas fa-circle-check text-3xl"></i>
-                    <div><div class="font-extrabold text-lg">Certificate verified</div><div class="text-emerald-100 text-sm">This is a genuine ORIZIS Academy certificate.</div></div>
+                    <div><div class="font-extrabold text-lg">Certificate verified</div><div class="text-emerald-100 text-sm">This is a genuine Lernoto certificate.</div></div>
                 </div>
                 <div class="p-6 space-y-3 text-sm">
                     <div class="flex justify-between border-b border-slate-100 pb-2"><span class="text-slate-400">Name</span><span class="font-bold text-right">${esc(c.userName)}</span></div>
@@ -85,7 +85,7 @@
                     <div class="flex justify-between border-b border-slate-100 pb-2"><span class="text-slate-400">Date issued</span><span class="font-semibold text-right">${esc(fmtDate(c.issuedAt))}</span></div>
                     <div class="flex justify-between"><span class="text-slate-400">Verification code</span><span class="font-mono font-bold text-right">${esc(c.certId || '')}</span></div>
                 </div>
-                <div class="px-6 pb-5 text-[11px] text-slate-400">ORIZIS Academy issues Certificates of Completion. This is not a government- or TEVETA-accredited qualification.</div>
+                <div class="px-6 pb-5 text-[11px] text-slate-400">Lernoto issues Certificates of Completion. This is not a government- or TEVETA-accredited qualification.</div>
             </div>`;
     }
 

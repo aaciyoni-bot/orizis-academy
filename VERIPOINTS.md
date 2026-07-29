@@ -1,4 +1,4 @@
-# VeriPoints plugin — ORIZIS Academy
+# VeriPoints plugin — Lernoto
 
 Adds the **shared ORIZIS wallet & loyalty points** as an optional second
 payment method, on top of Mobile Money. It **reuses** the central VeriPoints

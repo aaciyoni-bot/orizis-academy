@@ -1,5 +1,5 @@
 /* ================================================================
-   ORIZIS ACADEMY — shared configuration
+   LERNOTO — shared configuration
    Loaded by index.html (the app) and verify.html (certificate check).
    ================================================================ */
 window.OA_CONFIG = {

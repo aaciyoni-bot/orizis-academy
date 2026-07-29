@@ -1,4 +1,4 @@
-# ORIZIS Academy 🎓🇿🇲
+# Lernoto 🎓🇿🇲
 
 Affordable online skills courses for Zambia. Learners study on their phone,
 pay a small fee with **Mobile Money**, pass a short exam, and earn a
@@ -42,6 +42,6 @@ only three one-time steps. Deploy the site with `git push` (GitHub Pages) and
 the backend with `npx vercel --prod` from `backend/`.
 
 ## Legal
-ORIZIS Academy issues **Certificates of Completion** only — **not** government-
+Lernoto issues **Certificates of Completion** only — **not** government-
 or TEVETA-accredited qualifications, diplomas or degrees. All wording across the
 site and certificate reflects this.

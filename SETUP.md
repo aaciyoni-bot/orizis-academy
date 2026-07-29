@@ -1,4 +1,4 @@
-# ORIZIS Academy — Setup Guide
+# Lernoto — Setup Guide
 
 The site works **immediately in demo mode** (no setup needed) — you can browse
 courses, enrol (simulated payment), learn, take the exam and generate a
@@ -106,7 +106,7 @@ HTTPS is issued automatically by GitHub.
 
 ## Legal note (important)
 
-ORIZIS Academy issues **Certificates of Completion** only. The site and
+Lernoto issues **Certificates of Completion** only. The site and
 certificate must **never** claim government or **TEVETA** accreditation, a
 diploma, or a recognized degree. In Zambia, TEVETA regulates accredited
 vocational training — pursuing real TEVETA accreditation is a possible future

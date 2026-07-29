@@ -1,5 +1,5 @@
 /* ================================================================
-   ORIZIS ACADEMY — application engine
+   LERNOTO — application engine
    LMS + auth + Mobile Money enrolment + exam + certificate (PDF/QR)
    Works with Firebase (Auth+Firestore) when configured in config.js,
    otherwise runs in DEMO mode on localStorage.
@@ -949,7 +949,7 @@ async function issueCertificate(course, scorePercent, extra, mentorMsg) {
     const cert = {
         certId, userId: currentUser.uid, userName: currentUser.name || 'Learner',
         courseId: course.id, courseTitle: course.title, level: course.level || '',
-        scorePercent, issuedAt: new Date().toISOString(), issuer: 'ORIZIS Academy'
+        scorePercent, issuedAt: new Date().toISOString(), issuer: 'Lernoto'
     };
     if (extra && extra.submissionUrl) cert.projectUrl = extra.submissionUrl;
     try {
@@ -983,7 +983,7 @@ function renderCertificate(cert, mentorMsg) {
                 <div class="absolute inset-3 border-2 border-gold rounded-xl pointer-events-none"></div>
                 <div class="relative">
                     <div class="text-ink-700 text-3xl"><i class="fas fa-graduation-cap"></i></div>
-                    <div class="font-display font-extrabold text-xl mt-1 tracking-wide">ORIZIS ACADEMY</div>
+                    <div class="font-display font-extrabold text-xl mt-1 tracking-wide">LERNOTO</div>
                     <div class="text-[11px] tracking-[0.3em] text-slate-400 uppercase">Certificate of Completion</div>
                     <p class="text-slate-500 text-sm mt-6">This certifies that</p>
                     <p class="font-display font-extrabold text-2xl sm:text-3xl text-ink-800 mt-1">${esc(cert.userName)}</p>
@@ -999,7 +999,7 @@ function renderCertificate(cert, mentorMsg) {
                         </div>
                         <div id="certQr" class="shrink-0"></div>
                     </div>
-                    <p class="text-[9px] text-slate-400 mt-6 leading-snug">ORIZIS Academy Certificate of Completion. This is not a government- or TEVETA-accredited qualification. Verify at ${esc(new URL('verify.html', location.href).href)}</p>
+                    <p class="text-[9px] text-slate-400 mt-6 leading-snug">Lernoto Certificate of Completion. This is not a government- or TEVETA-accredited qualification. Verify at ${esc(new URL('verify.html', location.href).href)}</p>
                 </div>
             </div>
         </div>
@@ -1060,7 +1060,7 @@ async function downloadCert(certId) {
     // Header
     doc.setTextColor(67, 56, 202);
     doc.setFont('helvetica', 'bold'); doc.setFontSize(30);
-    doc.text('ORIZIS ACADEMY', W / 2, 96, { align: 'center' });
+    doc.text('LERNOTO', W / 2, 96, { align: 'center' });
     doc.setTextColor(120, 120, 120); doc.setFontSize(12); doc.setFont('helvetica', 'normal');
     doc.text('C E R T I F I C A T E   O F   C O M P L E T I O N', W / 2, 120, { align: 'center' });
     doc.setDrawColor(227, 174, 78); doc.setLineWidth(1); doc.line(W / 2 - 120, 132, W / 2 + 120, 132);
@@ -1088,7 +1088,7 @@ async function downloadCert(certId) {
     doc.text('Verification code', 90, 526);
 
     doc.setFont('helvetica', 'bold'); doc.setFontSize(12); doc.setTextColor(67, 56, 202);
-    doc.text('ORIZIS Academy', W - 90, 470, { align: 'right' });
+    doc.text('Lernoto', W - 90, 470, { align: 'right' });
     doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(120, 120, 120);
     doc.text('an ORIZIS TECHNOLOGY brand', W - 90, 484, { align: 'right' });
 
@@ -1101,7 +1101,7 @@ async function downloadCert(certId) {
 
     // Disclaimer
     doc.setFontSize(7.5); doc.setTextColor(150, 150, 150);
-    doc.text('ORIZIS Academy Certificate of Completion. This is not a government- or TEVETA-accredited qualification. Verify online at ' + new URL('verify.html', location.href).href,
+    doc.text('Lernoto Certificate of Completion. This is not a government- or TEVETA-accredited qualification. Verify online at ' + new URL('verify.html', location.href).href,
         W / 2, 556, { align: 'center' });
 
     doc.save('ORIZIS-Academy-Certificate-' + cert.certId + '.pdf');
@@ -1192,7 +1192,7 @@ function openAuth(mode, subtitle) {
 function closeAuth() { $('authModal').classList.add('hidden'); $('authModal').classList.remove('flex'); }
 function applyAuthMode() {
     const signup = authMode === 'signup';
-    $('authTitle').textContent = signup ? 'Create your Academy account' : 'Log in to ORIZIS Academy';
+    $('authTitle').textContent = signup ? 'Create your Academy account' : 'Log in to Lernoto';
     $('authNameWrap').classList.toggle('hidden', !signup);
     $('authToggleText').textContent = signup ? 'Already have an account?' : 'New here?';
     $('authToggleBtn').textContent = signup ? 'Log in' : 'Create an account';
@@ -1335,7 +1335,7 @@ if (IS_MOBILE && !IS_INSTALLED) setTimeout(showInstallBanner, 3500);
 
 /* ---------- Support / builder links ---------- */
 (function initLinks() {
-    const wa = 'https://wa.me/' + (CONFIG.WHATSAPP_SUPPORT || '') + '?text=' + encodeURIComponent('Hello ORIZIS Academy 👋 I have a question about a course.');
+    const wa = 'https://wa.me/' + (CONFIG.WHATSAPP_SUPPORT || '') + '?text=' + encodeURIComponent('Hello Lernoto 👋 I have a question about a course.');
     if ($('waSupportBtn')) $('waSupportBtn').href = wa;
     if ($('emailSupportBtn')) $('emailSupportBtn').href = 'mailto:' + (CONFIG.SUPPORT_EMAIL || '');
     if ($('builderApplyBtn')) $('builderApplyBtn').href = CONFIG.BUILDER_NETWORK_URL || '#';

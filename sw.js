@@ -1,4 +1,4 @@
-/* ORIZIS Academy service worker - enables app installation and basic offline shell */
+/* Lernoto service worker - enables app installation and basic offline shell */
 const CACHE = 'orizis-academy-v1';
 
 self.addEventListener('install', e => {

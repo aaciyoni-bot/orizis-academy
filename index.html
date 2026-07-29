@@ -3,16 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>ORIZIS Academy — Learn a Skill, Earn a Certificate 🇿🇲🎓</title>
-    <meta name="description" content="ORIZIS Academy — affordable online courses for Zambia. Learn business, web building, digital marketing, English and job skills on your phone. Pay with Mobile Money and earn a Certificate of Completion.">
+    <title>Lernoto — Learn a Skill, Earn a Certificate 🇿🇲🎓</title>
+    <meta name="description" content="Lernoto — affordable online courses for Zambia. Learn business, web building, digital marketing, English and job skills on your phone. Pay with Mobile Money and earn a Certificate of Completion.">
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#4338ca">
+    <meta name="theme-color" content="#141d39">
     <link rel="icon" type="image/svg+xml" href="icon.svg">
     <link rel="icon" type="image/png" href="icon-192.png">
     <link rel="apple-touch-icon" href="apple-touch-icon.png">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="ORIZIS Academy">
+    <meta name="apple-mobile-web-app-title" content="Lernoto">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Spectral:wght@600;700;800&family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -22,10 +22,10 @@
                 extend: {
                     colors: {
                         ink: {
-                            50: '#eef2ff', 100: '#e0e7ff', 200: '#c7d2fe', 300: '#a5b4fc', 400: '#818cf8',
-                            500: '#6366f1', 600: '#4f46e5', 700: '#4338ca', 800: '#3730a3', 900: '#312e81'
+                            50: '#f3f6fc', 100: '#e3e9f7', 200: '#c5d0ec', 300: '#98abd9', 400: '#6b84c5',
+                            500: '#4b63ab', 600: '#374c8c', 700: '#2b3b6e', 800: '#1f2c53', 900: '#141d39'
                         },
-                        gold: { DEFAULT: '#e3ae4e', soft: '#f4d58d', deep: '#b8862f' },
+                        gold: { DEFAULT: '#a8d33d', soft: '#cbe888', deep: '#7a9c24' },
                         zam: { green: '#198a00', red: '#de2010', black: '#000000', orange: '#ef7d00' }
                     },
                     fontFamily: { sans: ['Inter', 'sans-serif'], display: ['"Spectral"', 'serif'] }
@@ -38,35 +38,52 @@
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         .fade-in { animation: fadeIn 0.3s ease-in-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-        .spinner { border: 3px solid #e0e7ff; border-top-color: #4338ca; border-radius: 50%; width: 40px; height: 40px; animation: spin 0.8s linear infinite; }
+        .spinner { border: 3px solid #e3e9f7; border-top-color: #a8d33d; border-radius: 50%; width: 40px; height: 40px; animation: spin 0.8s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
         .pulse-ring { animation: pulseRing 1.5s ease-out infinite; }
         @keyframes pulseRing { 0% { box-shadow: 0 0 0 0 rgba(25,138,0,0.4); } 100% { box-shadow: 0 0 0 16px rgba(25,138,0,0); } }
         html { scroll-behavior: smooth; }
-        .cat-chip { flex-shrink: 0; display:inline-flex; align-items:center; gap:6px; background: #e0e7ff; border-radius: 9999px; padding: 6px 14px; font-size: 12px; font-weight: 600; color: #3730a3; transition: all .2s; white-space:nowrap; }
-        .cat-chip:hover, .cat-chip.active { background: #4338ca; color: #fff; }
-        .provider-btn.selected { border-color: #4338ca !important; background: #eef2ff; }
-        .faq-item { background: #eef2ff; border-radius: 16px; padding: 16px 20px; }
+
+        /* ===== LERNOTO — certificate identity =====
+           The product is proof you finished something. Everything borrows
+           from a certificate: a ruled margin, an awarded seal, ink navy
+           with one lime mark of approval. */
+        #courseGrid > * { position: relative; transition: transform .2s ease-out, box-shadow .2s ease-out; }
+        /* The ruled margin down the left of every course, as on a diploma. */
+        #courseGrid > *::before {
+            content: ''; position: absolute; top: 14px; bottom: 14px; left: 0; width: 3px;
+            background: #c5d0ec; border-radius: 3px; transition: background .2s ease-out;
+        }
+        #courseGrid > *:hover::before { background: #a8d33d; }
+        #courseGrid > *:hover { transform: translateY(-3px); box-shadow: 0 14px 32px -14px rgba(20,29,57,.38) !important; }
+
+        @media (prefers-reduced-motion: reduce) {
+            #courseGrid > *, .fade-in { transition: none !important; animation: none !important; }
+        }
+        .cat-chip { flex-shrink: 0; display:inline-flex; align-items:center; gap:6px; background: #e3e9f7; border-radius: 9999px; padding: 6px 14px; font-size: 12px; font-weight: 600; color: #2b3b6e; transition: all .2s; white-space:nowrap; }
+        .cat-chip:hover, .cat-chip.active { background: #374c8c; color: #fff; }
+        .provider-btn.selected { border-color: #a8d33d !important; background: #f6fae9; }
+        .faq-item { background: #f3f6fc; border-radius: 16px; padding: 16px 20px; }
         .faq-item summary { font-weight: 700; cursor: pointer; list-style: none; display: flex; justify-content: space-between; align-items: center; }
         .faq-item summary::-webkit-details-marker { display: none; }
-        .faq-item summary::after { content: '+'; font-size: 20px; color: #4338ca; font-weight: 800; }
+        .faq-item summary::after { content: '+'; font-size: 20px; color: #a8d33d; font-weight: 800; }
         .faq-item[open] summary::after { content: '−'; }
         .faq-item p { margin-top: 10px; color: #475569; font-size: 14px; line-height: 1.6; }
-        .lesson-body h2 { font-weight: 800; font-size: 1.05rem; margin: 1.1rem 0 .4rem; color:#312e81; }
-        .lesson-body h3 { font-weight: 700; font-size: .98rem; margin: 1rem 0 .3rem; color:#3730a3; }
+        .lesson-body h2 { font-weight: 800; font-size: 1.05rem; margin: 1.1rem 0 .4rem; color:#141d39; }
+        .lesson-body h3 { font-weight: 700; font-size: .98rem; margin: 1rem 0 .3rem; color:#1f2c53; }
         .lesson-body p { margin: .6rem 0; line-height: 1.75; color:#334155; }
         .lesson-body ul { margin: .5rem 0 .5rem 1.1rem; list-style: disc; }
         .lesson-body ol { margin: .5rem 0 .5rem 1.3rem; list-style: decimal; }
         .lesson-body li { margin: .35rem 0; line-height: 1.7; color:#334155; padding-left:.15rem; }
         .lesson-body strong { color:#1e293b; font-weight:700; }
-        .lesson-body code.inl { background:#eef2ff; color:#3730a3; padding:.08rem .35rem; border-radius:6px; font-size:.85em; font-family:ui-monospace,Menlo,Consolas,monospace; }
+        .lesson-body code.inl { background:#f3f6fc; color:#1f2c53; padding:.08rem .35rem; border-radius:6px; font-size:.85em; font-family:ui-monospace,Menlo,Consolas,monospace; }
         .lesson-body .code-wrap { margin: .8rem 0; border-radius:12px; overflow:hidden; border:1px solid #1e293b; }
-        .lesson-body .code-label { background:#1e293b; color:#c7d2fe; font-size:.72rem; font-weight:700; letter-spacing:.03em; padding:.4rem .8rem; }
+        .lesson-body .code-label { background:#1e293b; color:#c5d0ec; font-size:.72rem; font-weight:700; letter-spacing:.03em; padding:.4rem .8rem; }
         .lesson-body pre.code { background:#0b1020; color:#e2e8f0; margin:0; padding:.85rem 1rem; overflow-x:auto; font-size:.82rem; line-height:1.6; font-family:ui-monospace,Menlo,Consolas,monospace; }
         .lesson-body pre.code code { white-space:pre; }
         .lesson-body blockquote.callout { display:flex; gap:.6rem; background:#fffbeb; border-left:4px solid #e3ae4e; border-radius:10px; padding:.75rem .9rem; margin:.8rem 0; color:#78500f; font-size:.9rem; line-height:1.6; }
         .lesson-body blockquote.callout i { color:#e3ae4e; margin-top:.15rem; }
-        .lesson-body figure.shot { display:flex; align-items:center; gap:.6rem; justify-content:center; background:#eef2ff; border:2px dashed #a5b4fc; border-radius:12px; padding:1.4rem 1rem; margin:.8rem 0; color:#4f46e5; font-size:.82rem; font-weight:600; text-align:center; }
+        .lesson-body figure.shot { display:flex; align-items:center; gap:.6rem; justify-content:center; background:#f3f6fc; border:2px dashed #98abd9; border-radius:12px; padding:1.4rem 1rem; margin:.8rem 0; color:#374c8c; font-size:.82rem; font-weight:600; text-align:center; }
         .lesson-body figure.shot i { font-size:1.3rem; opacity:.8; }
         .lesson-body figure.lz-img { margin:.8rem 0; }
         .lesson-body figure.lz-img img { width:100%; border-radius:12px; border:1px solid #e2e8f0; }
@@ -79,39 +96,6 @@
 </head>
 <body class="bg-ink-50 font-sans text-slate-800 min-h-screen flex flex-col">
 
-    <!-- ═══ ORIZIS INTRO · standalone module (indigo/gold for the Academy) ═══ -->
-    <div id="orizis-intro">
-      <style>
-        #orizis-intro { position: fixed; inset: 0; z-index: 999999; background: #0b1020; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; transition: opacity 0.45s ease; }
-        #orizis-intro.oi-out { opacity: 0; pointer-events: none; }
-        #orizis-intro .oi-mark { font-family: 'Playfair Display', Georgia, serif; font-weight: 900; font-size: clamp(38px, 9vw, 72px); letter-spacing: 0.22em; margin-right: -0.22em; background: linear-gradient(100deg, #312e81 0%, #c7d2fe 28%, #e3ae4e 50%, #c7d2fe 72%, #312e81 100%); background-size: 240% auto; -webkit-background-clip: text; background-clip: text; color: transparent; opacity: 0; animation: oiShine 1.9s ease forwards, oiRise 0.9s cubic-bezier(0.22,1,0.36,1) forwards; }
-        #orizis-intro .oi-sub { font-family: 'Inter', Arial, sans-serif; font-weight: 700; font-size: clamp(10px, 2.2vw, 14px); letter-spacing: 0.55em; margin-right: -0.55em; color: #7c85c7; margin-top: 14px; opacity: 0; animation: oiFade 0.7s ease 0.55s forwards; }
-        #orizis-intro .oi-line { width: 0; height: 1px; background: linear-gradient(90deg, transparent, #e3ae4e, transparent); margin-top: 22px; animation: oiLine 1.1s ease 0.35s forwards; }
-        #orizis-intro .oi-load { display: flex; align-items: center; gap: 8px; margin-top: 26px; color: #7c85c7; font-family: 'Inter', Arial, sans-serif; font-weight: 600; font-size: 11px; letter-spacing: 0.2em; opacity: 0; animation: oiFade 0.7s ease 0.9s forwards; }
-        #orizis-intro .oi-spin { width: 14px; height: 14px; border: 2px solid rgba(227,174,78,0.25); border-top-color: #e3ae4e; border-radius: 50%; animation: oiSpin 0.9s linear infinite; }
-        @keyframes oiSpin { to { transform: rotate(360deg); } }
-        @keyframes oiShine { from { background-position: 200% center; } to { background-position: -40% center; } }
-        @keyframes oiRise { from { opacity: 0; transform: translateY(14px) scale(0.97); } to { opacity: 1; transform: none; } }
-        @keyframes oiFade { to { opacity: 1; } }
-        @keyframes oiLine { to { width: min(320px, 60vw); } }
-      </style>
-      <div class="oi-mark">ORIZIS</div>
-      <div class="oi-line"></div>
-      <div class="oi-sub">TECHNOLOGY</div>
-      <div class="oi-load"><div class="oi-spin"></div>LOADING</div>
-      <script>
-        (function () {
-          var el = document.getElementById('orizis-intro');
-          var done = false;
-          function out() { if (done) return; done = true; el.classList.add('oi-out'); setTimeout(function () { el.remove(); }, 500); }
-          el.addEventListener('click', out);
-          el.addEventListener('touchstart', out, { passive: true });
-          setTimeout(out, 1300);
-        })();
-      </script>
-    </div>
-    <!-- ═══ /ORIZIS INTRO ═══ -->
-
     <!-- ======================= TOP BAR ======================= -->
     <div class="bg-ink-900 text-white text-xs sm:text-sm py-1.5 px-4 text-center">
         <i class="fas fa-graduation-cap mr-1 text-gold-soft"></i> Learn a skill in about an hour · Pay with <b>MTN MoMo</b>, <b>Airtel Money</b> &amp; <b>Zamtel</b> · Earn a <b>Certificate of Completion</b>
@@ -121,12 +105,14 @@
     <header class="bg-white shadow-sm sticky top-0 z-40">
         <div class="max-w-7xl mx-auto px-4 py-3 flex items-center gap-3 sm:gap-6">
             <a href="#" onclick="goHome(); return false;" class="flex items-center gap-2 shrink-0">
-                <div class="bg-gradient-to-br from-ink-600 to-ink-800 text-white w-10 h-10 rounded-xl flex items-center justify-center text-lg shadow-md">
-                    <i class="fas fa-graduation-cap"></i>
-                </div>
+                <svg viewBox="0 0 40 40" class="w-10 h-10 shrink-0" role="img" aria-label="Lernoto">
+                    <circle cx="20" cy="17" r="12.5" fill="#1f2c53"/>
+                    <path d="M14.5 17.8l3.8 3.8 7.2-7.4" fill="none" stroke="#a8d33d" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M14 28.4V37l6-3.2 6 3.2v-8.6" fill="#374c8c"/>
+                </svg>
                 <div class="hidden sm:block">
-                    <h1 class="text-xl font-display font-extrabold tracking-tight leading-none">ORIZIS <span class="text-ink-600">Academy</span></h1>
-                    <p class="text-[10px] text-slate-400 leading-none mt-0.5">Learn. Get certified. Move forward.</p>
+                    <h1 class="text-xl font-display font-extrabold tracking-tight leading-none text-ink-900">Lernoto</h1>
+                    <p class="text-[10px] text-ink-600 font-semibold leading-none mt-1 tracking-wide uppercase">Learn it. Prove it.</p>
                 </div>
             </a>
 
@@ -224,7 +210,7 @@
     <!-- ======================= HOW IT WORKS ======================= -->
     <section id="how-it-works" class="bg-white border-t border-ink-100">
         <div class="max-w-7xl mx-auto px-4 py-14">
-            <h3 class="text-2xl sm:text-3xl font-display font-extrabold text-center">How ORIZIS Academy Works</h3>
+            <h3 class="text-2xl sm:text-3xl font-display font-extrabold text-center">How Lernoto Works</h3>
             <p class="text-center text-slate-500 mt-2 max-w-xl mx-auto">From your phone to a certificate in four simple steps — no classroom, no credit card.</p>
             <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mt-10">
                 <div class="text-center p-5 rounded-2xl bg-ink-50">
@@ -279,7 +265,7 @@
         <div class="max-w-7xl mx-auto px-4 py-14 grid sm:grid-cols-2 gap-10 items-center">
             <div>
                 <h3 class="text-2xl sm:text-3xl font-display font-extrabold">About ORIZIS <span class="text-ink-600">Academy</span></h3>
-                <p class="mt-4 text-slate-600 leading-relaxed">Skills change lives — but training is often too expensive, too far away, or takes too long. ORIZIS Academy makes it simple: short, practical online courses you can finish in about an hour, on the phone you already own.</p>
+                <p class="mt-4 text-slate-600 leading-relaxed">Skills change lives — but training is often too expensive, too far away, or takes too long. Lernoto makes it simple: short, practical online courses you can finish in about an hour, on the phone you already own.</p>
                 <p class="mt-3 text-slate-600 leading-relaxed">Every course is built to be <b>useful the same day</b> — how to build a website, earn online, market a business, write a strong CV, or run the money side of a small shop. You pay a small fee in Kwacha with Mobile Money, learn at your own pace, pass a short exam, and earn a Certificate of Completion you can show to employers.</p>
                 <p class="mt-3 text-slate-600 leading-relaxed">Proudly part of <b>ORIZIS Technology</b>. 🇿🇲</p>
             </div>
@@ -307,7 +293,7 @@
             <div class="mt-8 space-y-3">
                 <details class="faq-item">
                     <summary>Is the certificate an official diploma or degree?</summary>
-                    <p>No. ORIZIS Academy issues a <b>Certificate of Completion</b> that proves you finished a course and passed its exam. It is not a government- or TEVETA-accredited qualification, diploma or degree. It is real proof of the skills you learned, useful to show employers and clients.</p>
+                    <p>No. Lernoto issues a <b>Certificate of Completion</b> that proves you finished a course and passed its exam. It is not a government- or TEVETA-accredited qualification, diploma or degree. It is real proof of the skills you learned, useful to show employers and clients.</p>
                 </details>
                 <details class="faq-item">
                     <summary>Do I need a computer or a credit card?</summary>
@@ -356,8 +342,12 @@
         <div class="max-w-7xl mx-auto px-4 py-10 grid sm:grid-cols-3 gap-8 text-sm">
             <div>
                 <div class="flex items-center gap-2 mb-3">
-                    <div class="bg-gradient-to-br from-ink-600 to-ink-800 text-white w-8 h-8 rounded-lg flex items-center justify-center"><i class="fas fa-graduation-cap"></i></div>
-                    <span class="font-display font-extrabold text-white text-lg">ORIZIS <span class="text-ink-300">Academy</span></span>
+                    <svg viewBox="0 0 40 40" class="w-8 h-8 shrink-0" aria-hidden="true">
+                        <circle cx="20" cy="17" r="12.5" fill="#e3e9f7"/>
+                        <path d="M14.5 17.8l3.8 3.8 7.2-7.4" fill="none" stroke="#374c8c" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M14 28.4V37l6-3.2 6 3.2v-8.6" fill="#a8d33d"/>
+                    </svg>
+                    <span class="font-display font-extrabold text-white text-lg">Lernoto</span>
                 </div>
                 <p class="text-ink-100/60">Affordable, practical online courses for Zambia. Learn a skill, earn a Certificate of Completion, and move your career or business forward.</p>
             </div>
@@ -379,17 +369,17 @@
                     <span class="bg-red-600 text-white font-bold px-3 py-1.5 rounded-lg text-xs">Airtel Money</span>
                     <span class="bg-green-700 text-white font-bold px-3 py-1.5 rounded-lg text-xs">Zamtel</span>
                 </div>
-                <p class="mt-4 text-ink-100/50 text-xs">ORIZIS Academy issues <b>Certificates of Completion</b>. These are not government- or TEVETA-accredited qualifications.</p>
+                <p class="mt-4 text-ink-100/50 text-xs">Lernoto issues <b>Certificates of Completion</b>. These are not government- or TEVETA-accredited qualifications.</p>
             </div>
         </div>
-        <div class="border-t border-white/10 text-center py-4 text-xs text-ink-100/50">© 2026 ORIZIS Academy · an ORIZIS TECHNOLOGY brand. All rights reserved.</div>
+        <div class="border-t border-white/10 text-center py-4 text-xs text-ink-100/50">© 2026 Lernoto · an ORIZIS TECHNOLOGY brand. All rights reserved.</div>
     </footer>
 
     <!-- ======================= AUTH MODAL ======================= -->
     <div id="authModal" class="fixed inset-0 bg-black/60 z-[70] hidden items-center justify-center p-4" onclick="if(event.target===this) closeAuth()">
         <div class="bg-white rounded-2xl w-full max-w-md overflow-hidden fade-in">
             <div class="bg-gradient-to-br from-ink-700 to-ink-900 text-white p-5">
-                <h3 class="font-bold text-lg"><i class="fas fa-graduation-cap mr-2"></i><span id="authTitle">Log in to ORIZIS Academy</span></h3>
+                <h3 class="font-bold text-lg"><i class="fas fa-graduation-cap mr-2"></i><span id="authTitle">Log in to Lernoto</span></h3>
                 <p class="text-ink-100/80 text-sm mt-1" id="authSubtitle">Save your progress and earn certificates.</p>
             </div>
             <div class="p-5 space-y-4">
@@ -569,7 +559,7 @@
                     </div>
                     <label class="flex items-start gap-2 text-xs text-slate-500">
                         <input id="scholConsent" type="checkbox" class="accent-ink-600 mt-0.5">
-                        <span>I agree that ORIZIS Academy may store the details above to process my scholarship. <a href="privacy.html" target="_blank" class="text-ink-600 underline">Privacy</a></span>
+                        <span>I agree that Lernoto may store the details above to process my scholarship. <a href="privacy.html" target="_blank" class="text-ink-600 underline">Privacy</a></span>
                     </label>
                     <p id="scholError" class="text-zam-red text-sm font-semibold hidden"></p>
                     <button onclick="submitScholarship()" class="w-full bg-zam-green hover:bg-green-800 text-white font-bold py-3 rounded-xl transition">Submit application</button>
@@ -599,7 +589,7 @@
     <div id="installBanner" class="hidden fixed bottom-0 left-0 right-0 z-40 bg-ink-900 text-white px-4 py-3 flex items-center gap-3 shadow-2xl">
         <img src="icon-192.png" alt="" class="w-10 h-10 rounded-xl shrink-0">
         <div class="flex-1 min-w-0">
-            <p class="font-bold text-sm leading-tight">Get the ORIZIS Academy App 🇿🇲</p>
+            <p class="font-bold text-sm leading-tight">Get the Lernoto App 🇿🇲</p>
             <p class="text-[11px] text-ink-100/80 leading-tight">Learn from your home screen, anytime</p>
         </div>
         <button onclick="installApp()" class="shrink-0 bg-ink-600 hover:bg-ink-500 text-white text-xs font-extrabold px-4 py-2.5 rounded-full transition"><i class="fas fa-download mr-1"></i>INSTALL</button>
