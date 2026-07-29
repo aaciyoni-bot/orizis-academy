@@ -78,22 +78,62 @@ const totalLessons = course => flatLessons(course).length;
 
 // Minimal, safe formatter for lesson text: escapes HTML then renders
 // ## headings, "- " bullets, and paragraphs.
+// Inline formatting: escape, then **bold** and `code`.
+function inlineFmt(text) {
+    let s = esc(text);
+    s = s.replace(/`([^`]+)`/g, '<code class="inl">$1</code>');
+    s = s.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+    return s;
+}
+
+// Rich lesson renderer. Supports (safe, escaped):
+//   ## / ### headings · - or * bullets · 1. numbered steps · > callout
+//   ```label ... ``` code blocks (prompts/commands) · ![alt](src) images
+//   [[SHOT: description]] screenshot placeholder slots
 function renderLessonBody(text) {
     const lines = String(text || '').split('\n');
-    let html = '', inList = false;
-    const closeList = () => { if (inList) { html += '</ul>'; inList = false; } };
-    lines.forEach(raw => {
-        const line = raw.trim();
-        if (!line) { closeList(); return; }
-        if (line.startsWith('## ')) { closeList(); html += '<h2>' + esc(line.slice(3)) + '</h2>'; return; }
-        if (line.startsWith('- ') || line.startsWith('* ')) {
-            if (!inList) { html += '<ul>'; inList = true; }
-            html += '<li>' + esc(line.slice(2)) + '</li>'; return;
+    let html = '', listType = null, inQuote = false, quoteBuf = [];
+    let inCode = false, codeLabel = '', codeBuf = [];
+    const closeList = () => { if (listType) { html += '</' + listType + '>'; listType = null; } };
+    const closeQuote = () => { if (inQuote) { html += '<blockquote class="callout"><i class="fas fa-lightbulb"></i><div>' + quoteBuf.join('<br>') + '</div></blockquote>'; inQuote = false; quoteBuf = []; } };
+
+    for (let i = 0; i < lines.length; i++) {
+        const raw = lines[i], line = raw.trim();
+
+        if (line.startsWith('```')) {
+            if (!inCode) { closeList(); closeQuote(); inCode = true; codeLabel = line.slice(3).trim(); codeBuf = []; }
+            else {
+                const lbl = codeLabel ? '<div class="code-label"><i class="fas fa-' + (/prompt/i.test(codeLabel) ? 'comment-dots' : 'terminal') + '"></i> ' + esc(codeLabel) + '</div>' : '';
+                html += '<div class="code-wrap">' + lbl + '<pre class="code"><code>' + esc(codeBuf.join('\n')) + '</code></pre></div>';
+                inCode = false; codeLabel = '';
+            }
+            continue;
         }
+        if (inCode) { codeBuf.push(raw); continue; }
+
+        if (!line) { closeList(); closeQuote(); continue; }
+
+        const shot = line.match(/^\[\[SHOT:\s*(.+?)\]\]$/i);
+        if (shot) { closeList(); closeQuote(); html += '<figure class="shot"><i class="fas fa-image"></i><span>Screenshot: ' + esc(shot[1]) + '</span></figure>'; continue; }
+
+        const img = line.match(/^!\[(.*?)\]\((.+?)\)$/);
+        if (img) { closeList(); closeQuote(); html += '<figure class="lz-img"><img src="' + esc(img[2]) + '" alt="' + esc(img[1]) + '" loading="lazy">' + (img[1] ? '<figcaption>' + esc(img[1]) + '</figcaption>' : '') + '</figure>'; continue; }
+
+        if (line.startsWith('### ')) { closeList(); closeQuote(); html += '<h3>' + inlineFmt(line.slice(4)) + '</h3>'; continue; }
+        if (line.startsWith('## ')) { closeList(); closeQuote(); html += '<h2>' + inlineFmt(line.slice(3)) + '</h2>'; continue; }
+
+        if (line.startsWith('> ')) { closeList(); inQuote = true; quoteBuf.push(inlineFmt(line.slice(2))); continue; }
+        closeQuote();
+
+        const ol = line.match(/^(\d+)[.)]\s+(.*)$/);
+        if (ol) { if (listType !== 'ol') { closeList(); html += '<ol>'; listType = 'ol'; } html += '<li>' + inlineFmt(ol[2]) + '</li>'; continue; }
+        if (line.startsWith('- ') || line.startsWith('* ')) { if (listType !== 'ul') { closeList(); html += '<ul>'; listType = 'ul'; } html += '<li>' + inlineFmt(line.slice(2)) + '</li>'; continue; }
+
         closeList();
-        html += '<p>' + esc(line) + '</p>';
-    });
-    closeList();
+        html += '<p>' + inlineFmt(line) + '</p>';
+    }
+    closeList(); closeQuote();
+    if (inCode) html += '<div class="code-wrap"><pre class="code"><code>' + esc(codeBuf.join('\n')) + '</code></pre></div>';
     return html;
 }
 
@@ -147,13 +187,16 @@ const Store = {
         enrolledMap[courseId] = e;
         return e;
     },
-    async completeCourse(courseId, scorePercent, certId) {
+    async completeCourse(courseId, scorePercent, certId, extra) {
         const e = await this.getEnrollment(courseId);
         if (!e) return null;
         e.status = 'completed'; e.scorePercent = scorePercent; e.certId = certId;
+        const fields = { status: 'completed', scorePercent, certId };
+        if (extra && extra.submissionUrl) { e.submissionUrl = extra.submissionUrl; fields.submissionUrl = extra.submissionUrl; }
+        if (extra && extra.reflections) { e.reflections = extra.reflections; fields.reflections = extra.reflections; }
         const uid = currentUser.uid;
         if (MODE === 'firebase') {
-            await db.collection('enrollments').doc(enrollDocId(uid, courseId)).update({ status: 'completed', scorePercent, certId });
+            await db.collection('enrollments').doc(enrollDocId(uid, courseId)).update(fields);
         } else {
             localStorage.setItem('oa_enroll_' + uid + '_' + courseId, JSON.stringify(e));
         }
@@ -554,9 +597,12 @@ function renderLearn() {
         side += `</div>`;
     });
 
+    const isCapstone = !!c.capstone;
+    const finalLabel = isCapstone ? 'Submit your final project' : 'Take the final exam';
+    const finalIcon = isCapstone ? 'fa-laptop-code' : 'fa-file-pen';
     const examBtn = allDone
-        ? `<button onclick="OA.startExam()" class="w-full mt-2 bg-gold text-ink-900 font-extrabold py-3 rounded-xl hover:brightness-105 transition"><i class="fas fa-file-pen mr-2"></i>Take the final exam</button>`
-        : `<button disabled class="w-full mt-2 bg-slate-100 text-slate-400 font-bold py-3 rounded-xl cursor-not-allowed"><i class="fas fa-lock mr-2"></i>Finish all lessons to unlock the exam</button>`;
+        ? `<button onclick="OA.startExam()" class="w-full mt-2 bg-gold text-ink-900 font-extrabold py-3 rounded-xl hover:brightness-105 transition"><i class="fas ${finalIcon} mr-2"></i>${finalLabel}</button>`
+        : `<button disabled class="w-full mt-2 bg-slate-100 text-slate-400 font-bold py-3 rounded-xl cursor-not-allowed"><i class="fas fa-lock mr-2"></i>Finish all lessons to unlock the ${isCapstone ? 'project' : 'exam'}</button>`;
 
     const curDone = doneSet.has(cur.key);
     $('learnView').innerHTML = `
@@ -606,6 +652,7 @@ async function completeCurrent() {
    ================================================================ */
 function startExam() {
     const c = learnCourse;
+    if (c.capstone) { return startCapstone(); }
     const quiz = c.quiz || [];
     if (!quiz.length) { showToast('This course has no exam yet.'); return; }
     $('quizView').innerHTML = `
@@ -666,6 +713,94 @@ async function submitExam() {
 }
 
 /* ================================================================
+   CAPSTONE — "present your website to the virtual mentor"
+   ================================================================ */
+function startCapstone() {
+    const c = learnCourse;
+    const cap = c.capstone || {};
+    const checklist = cap.checklist || [];
+    const reflect = cap.reflect || [];
+    const knowledge = cap.knowledge || [];
+    $('quizView').innerHTML = `
+        <button onclick="OA.openLearn('${c.id}')" class="text-sm font-bold text-ink-600 hover:underline mb-3"><i class="fas fa-arrow-left mr-1"></i>Back to lessons</button>
+        <div class="bg-white rounded-2xl border border-ink-100 p-6">
+            <div class="flex items-center gap-3">
+                <div class="w-12 h-12 rounded-full bg-ink-100 flex items-center justify-center text-ink-700 text-xl"><i class="fas fa-user-tie"></i></div>
+                <div><h2 class="text-2xl font-display font-extrabold leading-none">Final Project</h2>
+                <p class="text-slate-500 text-sm mt-1">Present your website to the virtual mentor</p></div>
+            </div>
+            ${cap.intro ? `<div class="lesson-body mt-4">${renderLessonBody(cap.intro)}</div>` : ''}
+
+            <label class="text-sm font-semibold text-slate-700 block mt-6 mb-2"><i class="fas fa-globe text-ink-500 mr-1"></i> ${esc(cap.urlLabel || 'Your live website address (URL)')}</label>
+            <input id="capUrl" type="url" inputmode="url" placeholder="https://your-site.example.com"
+                class="w-full border border-slate-300 rounded-xl px-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ink-500">
+
+            ${checklist.length ? `<h3 class="font-bold mt-6 mb-2">Before you submit, confirm:</h3>
+            <div class="space-y-2">
+                ${checklist.map((item, i) => `<label class="flex items-start gap-3 p-3 rounded-xl border border-slate-200 hover:border-ink-400 cursor-pointer text-sm">
+                    <input type="checkbox" id="cap_chk_${i}" class="accent-ink-600 mt-0.5"><span>${esc(item)}</span></label>`).join('')}
+            </div>` : ''}
+
+            ${reflect.length ? `<h3 class="font-bold mt-6 mb-2">The mentor asks:</h3>
+            <div class="space-y-4">
+                ${reflect.map((q, i) => `<div><label class="text-sm font-semibold text-slate-600 block mb-1">${i + 1}. ${esc(q)}</label>
+                    <textarea id="cap_ref_${i}" rows="2" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ink-500"></textarea></div>`).join('')}
+            </div>` : ''}
+
+            ${knowledge.length ? `<h3 class="font-bold mt-6 mb-2">Quick knowledge check:</h3>
+            <form id="capKnow" class="space-y-5">
+                ${knowledge.map((q, qi) => `<div><p class="font-semibold text-sm">${qi + 1}. ${esc(q.q)}</p>
+                    <div class="mt-2 space-y-2">${(q.options || []).map((opt, oi) => `<label class="flex items-center gap-3 p-2.5 rounded-xl border border-slate-200 hover:border-ink-400 cursor-pointer text-sm">
+                        <input type="radio" name="k${qi}" value="${oi}" class="accent-ink-600"><span>${esc(opt)}</span></label>`).join('')}</div></div>`).join('')}
+            </form>` : ''}
+
+            <p id="capError" class="text-zam-red text-sm font-semibold hidden mt-4"></p>
+            <button onclick="OA.submitCapstone()" class="mt-5 w-full sm:w-auto bg-zam-green hover:bg-green-800 text-white font-bold px-8 py-3.5 rounded-xl transition"><i class="fas fa-paper-plane mr-2"></i>Present to the mentor</button>
+        </div>`;
+    showView('quizView');
+}
+
+async function submitCapstone() {
+    const c = learnCourse;
+    const cap = c.capstone || {};
+    const err = $('capError');
+    err.classList.add('hidden');
+
+    const url = $('capUrl').value.trim();
+    if (!/^https?:\/\/[^\s.]+\.[^\s]+/i.test(url)) { err.textContent = 'Please enter a valid public website address, starting with https://'; err.classList.remove('hidden'); return; }
+
+    const checklist = cap.checklist || [];
+    if (!checklist.every((_, i) => $('cap_chk_' + i) && $('cap_chk_' + i).checked)) { err.textContent = 'Please confirm every item in the checklist before submitting.'; err.classList.remove('hidden'); return; }
+
+    const reflect = cap.reflect || [];
+    const reflections = reflect.map((_, i) => ($('cap_ref_' + i) ? $('cap_ref_' + i).value.trim() : ''));
+    if (reflections.some(r => r.length < 3)) { err.textContent = "Please answer all of the mentor's questions."; err.classList.remove('hidden'); return; }
+
+    const knowledge = cap.knowledge || [];
+    let answered = 0, correct = 0;
+    knowledge.forEach((q, qi) => {
+        const sel = document.querySelector(`input[name="k${qi}"]:checked`);
+        if (sel) { answered++; if (parseInt(sel.value) === q.answer) correct++; }
+    });
+    if (answered < knowledge.length) { err.textContent = 'Please answer all the knowledge-check questions.'; err.classList.remove('hidden'); return; }
+
+    const pct = knowledge.length ? Math.round((correct / knowledge.length) * 100) : 100;
+    if (pct < 70) {
+        $('quizView').innerHTML = `
+            <div class="bg-white rounded-2xl border border-ink-100 p-8 text-center">
+                <div class="w-20 h-20 mx-auto rounded-full bg-amber-100 flex items-center justify-center"><i class="fas fa-rotate-right text-amber-500 text-3xl"></i></div>
+                <h2 class="text-2xl font-display font-extrabold mt-5">Nearly there!</h2>
+                <p class="text-slate-500 mt-2">Your knowledge check scored <b>${pct}%</b> (70% needed). Your website looks submitted — just review the lessons and re-check your answers.</p>
+                <button onclick="OA.startExam()" class="mt-6 bg-ink-600 text-white font-bold px-6 py-3 rounded-xl hover:bg-ink-700"><i class="fas fa-rotate-right mr-2"></i>Try again</button>
+            </div>`;
+        return;
+    }
+
+    const mentor = `Your website is live at <a href="${esc(url)}" target="_blank" rel="noopener" class="text-ink-600 font-bold underline break-all">${esc(url)}</a>. You took a real site from an idea to the internet — exactly what paying clients need. Keep this in your portfolio, and when you're ready, apply to the ORIZIS Builder Network.`;
+    await issueCertificate(c, pct, { submissionUrl: url, reflections }, mentor);
+}
+
+/* ================================================================
    CERTIFICATE
    ================================================================ */
 function newCertId() {
@@ -677,32 +812,40 @@ function verifyUrl(certId) {
     return new URL('verify.html', location.href).href + '?id=' + encodeURIComponent(certId);
 }
 
-async function issueCertificate(course, scorePercent) {
+async function issueCertificate(course, scorePercent, extra, mentorMsg) {
     const certId = newCertId();
     const cert = {
         certId, userId: currentUser.uid, userName: currentUser.name || 'Learner',
         courseId: course.id, courseTitle: course.title, level: course.level || '',
         scorePercent, issuedAt: new Date().toISOString(), issuer: 'ORIZIS Academy'
     };
+    if (extra && extra.submissionUrl) cert.projectUrl = extra.submissionUrl;
     try {
-        await Store.completeCourse(course.id, scorePercent, certId); // must be 'completed' before cert (Firestore rule)
+        await Store.completeCourse(course.id, scorePercent, certId, extra); // must be 'completed' before cert (Firestore rule)
         await Store.createCertificate(cert);
     } catch (e) {
         console.error('Certificate save failed:', e);
         showToast('Could not save certificate. Please try again.');
         return;
     }
-    renderCertificate(cert);
+    renderCertificate(cert, mentorMsg);
 }
 
-function renderCertificate(cert) {
+function renderCertificate(cert, mentorMsg) {
     showView('certView');
+    const mentorCard = mentorMsg ? `
+        <div class="max-w-2xl mx-auto mb-6 bg-ink-50 border border-ink-100 rounded-2xl p-5 flex gap-4">
+            <div class="w-11 h-11 shrink-0 rounded-full bg-ink-700 text-white flex items-center justify-center text-lg"><i class="fas fa-user-tie"></i></div>
+            <div><div class="font-bold text-ink-800 text-sm mb-1">Virtual mentor review</div>
+            <p class="text-sm text-slate-600 leading-relaxed">${mentorMsg}</p></div>
+        </div>` : '';
     $('certView').innerHTML = `
         <div class="text-center mb-6">
             <div class="w-16 h-16 mx-auto rounded-full bg-zam-green flex items-center justify-center"><i class="fas fa-check text-white text-2xl"></i></div>
             <h2 class="text-2xl font-display font-extrabold mt-3">Congratulations, ${esc(cert.userName)}! 🎉</h2>
             <p class="text-slate-500 mt-1">You passed with ${cert.scorePercent}% and earned your Certificate of Completion.</p>
         </div>
+        ${mentorCard}
         <div id="certPreview" class="mx-auto max-w-2xl bg-white rounded-2xl shadow-lg overflow-hidden border-4 border-ink-800">
             <div class="p-6 sm:p-10 text-center relative">
                 <div class="absolute inset-3 border-2 border-gold rounded-xl pointer-events-none"></div>
@@ -1089,7 +1232,7 @@ function boot() {
 // Public API (referenced by inline onclick handlers)
 window.OA = {
     openCourse, enroll, openLearn, gotoLesson, prevLesson, completeCurrent,
-    startExam, submitExam, downloadCert, viewCertificateById, showMyLearning,
+    startExam, submitExam, submitCapstone, downloadCert, viewCertificateById, showMyLearning,
     filterField, goHome
 };
 // A few handlers used directly in HTML attributes:

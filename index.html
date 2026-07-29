@@ -52,9 +52,24 @@
         .faq-item[open] summary::after { content: '−'; }
         .faq-item p { margin-top: 10px; color: #475569; font-size: 14px; line-height: 1.6; }
         .lesson-body h2 { font-weight: 800; font-size: 1.05rem; margin: 1.1rem 0 .4rem; color:#312e81; }
+        .lesson-body h3 { font-weight: 700; font-size: .98rem; margin: 1rem 0 .3rem; color:#3730a3; }
         .lesson-body p { margin: .6rem 0; line-height: 1.75; color:#334155; }
         .lesson-body ul { margin: .5rem 0 .5rem 1.1rem; list-style: disc; }
-        .lesson-body li { margin: .3rem 0; line-height: 1.7; color:#334155; }
+        .lesson-body ol { margin: .5rem 0 .5rem 1.3rem; list-style: decimal; }
+        .lesson-body li { margin: .35rem 0; line-height: 1.7; color:#334155; padding-left:.15rem; }
+        .lesson-body strong { color:#1e293b; font-weight:700; }
+        .lesson-body code.inl { background:#eef2ff; color:#3730a3; padding:.08rem .35rem; border-radius:6px; font-size:.85em; font-family:ui-monospace,Menlo,Consolas,monospace; }
+        .lesson-body .code-wrap { margin: .8rem 0; border-radius:12px; overflow:hidden; border:1px solid #1e293b; }
+        .lesson-body .code-label { background:#1e293b; color:#c7d2fe; font-size:.72rem; font-weight:700; letter-spacing:.03em; padding:.4rem .8rem; }
+        .lesson-body pre.code { background:#0b1020; color:#e2e8f0; margin:0; padding:.85rem 1rem; overflow-x:auto; font-size:.82rem; line-height:1.6; font-family:ui-monospace,Menlo,Consolas,monospace; }
+        .lesson-body pre.code code { white-space:pre; }
+        .lesson-body blockquote.callout { display:flex; gap:.6rem; background:#fffbeb; border-left:4px solid #e3ae4e; border-radius:10px; padding:.75rem .9rem; margin:.8rem 0; color:#78500f; font-size:.9rem; line-height:1.6; }
+        .lesson-body blockquote.callout i { color:#e3ae4e; margin-top:.15rem; }
+        .lesson-body figure.shot { display:flex; align-items:center; gap:.6rem; justify-content:center; background:#eef2ff; border:2px dashed #a5b4fc; border-radius:12px; padding:1.4rem 1rem; margin:.8rem 0; color:#4f46e5; font-size:.82rem; font-weight:600; text-align:center; }
+        .lesson-body figure.shot i { font-size:1.3rem; opacity:.8; }
+        .lesson-body figure.lz-img { margin:.8rem 0; }
+        .lesson-body figure.lz-img img { width:100%; border-radius:12px; border:1px solid #e2e8f0; }
+        .lesson-body figure.lz-img figcaption { text-align:center; font-size:.78rem; color:#64748b; margin-top:.4rem; }
         .guide-arrow-down { animation: bounceDown 1s ease-in-out infinite; }
         .guide-arrow-up { animation: bounceUp 1s ease-in-out infinite; }
         @keyframes bounceDown { 0%,100% { transform: translateY(0); } 50% { transform: translateY(14px); } }
