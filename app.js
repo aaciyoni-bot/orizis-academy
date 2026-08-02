@@ -443,15 +443,50 @@ function enroll(courseId, mode) {
     openCheckout(c, amount);
 }
 
+/* ---- ORIZIS gift voucher (redeems against the shared Vochira voucher API) ---- */
+const VOUCHER = { api: 'https://zedcards-site.vercel.app', site: 'Lernoto', applied: null };
+function voucherDue() { return Math.max(0, (payAmount || 0) - (VOUCHER.applied ? VOUCHER.applied.amount : 0)); }
+async function applyVoucher() {
+    const code = ($('vCode').value || '').trim().toUpperCase();
+    const msg = $('vMsg');
+    const show = (text, ok) => { msg.textContent = text; msg.className = 'text-xs mt-1 font-semibold ' + (ok ? 'text-zam-green' : 'text-zam-red'); msg.classList.remove('hidden'); };
+    if (!/^VCH-[A-Z0-9]{4}-[A-Z0-9]{4}$/.test(code)) return show('Enter a voucher like VCH-XXXX-XXXX.', false);
+    show('Checking…', true);
+    try {
+        const d = await fetch(VOUCHER.api + '/api/voucher/check?code=' + encodeURIComponent(code), { signal: AbortSignal.timeout(15000) }).then(r => r.json());
+        if (d.disabled) return show('Vouchers are not available right now.', false);
+        if (!d.valid) return show(d.status === 'redeemed' ? 'This voucher was already used.' : 'Voucher not found.', false);
+        if (d.site && d.site.toLowerCase() !== VOUCHER.site.toLowerCase()) return show('This voucher is for ' + d.site + ', not this store.', false);
+        VOUCHER.applied = { code, amount: d.amount };
+        $('payTotal').textContent = fmtK(voucherDue());
+        $('vCode').disabled = true;
+        show('✓ ' + fmtK(d.amount) + ' voucher applied — new total ' + fmtK(voucherDue()), true);
+    } catch (e) { show('Could not check the voucher. Try again.', false); }
+}
+async function redeemVoucher() {
+    if (!VOUCHER.applied) return;
+    try {
+        await fetch(VOUCHER.api + '/api/voucher/redeem', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ code: VOUCHER.applied.code, site: VOUCHER.site }),
+            signal: AbortSignal.timeout(15000)
+        });
+    } catch (e) { /* enrolment already succeeded; store reconciles if needed */ }
+}
+window.applyVoucher = applyVoucher;
+
 function openCheckout(course, amount) {
     payCourse = course;
     payAmount = amount || course.priceZmw;
+    VOUCHER.applied = null;
+    if ($('vCode')) { $('vCode').value = ''; $('vCode').disabled = false; }
+    if ($('vMsg')) $('vMsg').classList.add('hidden');
     selectedProvider = null;
     document.querySelectorAll('.provider-btn').forEach(b => b.classList.remove('selected'));
     $('payError').classList.add('hidden');
     $('payPhone').value = '';
     $('payCourseTitle').textContent = course.title;
-    $('payTotal').textContent = fmtK(payAmount);
+    $('payTotal').textContent = fmtK(voucherDue());
     $('payStep1').classList.remove('hidden');
     $('payStep2').classList.add('hidden');
     $('payStep3').classList.add('hidden');
@@ -578,25 +613,32 @@ async function tryRealPayment(order) {
 async function submitPayment() {
     const phone = $('payPhone').value.trim();
     const err = $('payError');
-    if (!selectedProvider) { err.textContent = 'Please choose your mobile network.'; err.classList.remove('hidden'); return; }
-    if (!/^(9|7)\d{8}$/.test(phone)) { err.textContent = 'Enter a valid Zambian number, e.g. 971234567.'; err.classList.remove('hidden'); return; }
+    const due = voucherDue();   // course price minus any applied gift voucher
+    if (due > 0) {
+        if (!selectedProvider) { err.textContent = 'Please choose your mobile network.'; err.classList.remove('hidden'); return; }
+        if (!/^(9|7)\d{8}$/.test(phone)) { err.textContent = 'Enter a valid Zambian number, e.g. 971234567.'; err.classList.remove('hidden'); return; }
+    }
     err.classList.add('hidden');
 
-    const order = { provider: selectedProvider, phone, total: payAmount, courseTitle: payCourse.title };
-    $('pay2Total').textContent = fmtK(order.total);
-    $('pay2Phone').textContent = '+260 ' + phone;
+    const order = { provider: selectedProvider, phone, total: due, courseTitle: payCourse.title };
+    $('pay2Total').textContent = fmtK(due);
+    $('pay2Phone').textContent = due > 0 ? '+260 ' + phone : 'your voucher';
     $('payStep1').classList.add('hidden');
     $('payStep2').classList.remove('hidden');
 
-    const outcome = await tryRealPayment(order);
-    if (outcome === 'failed') {
-        $('payStep2').classList.add('hidden');
-        $('payStep1').classList.remove('hidden');
-        err.textContent = 'The payment was not completed. Please check your phone and try again.';
-        err.classList.remove('hidden');
-        return;
+    let outcome = true;
+    if (due > 0) {
+        outcome = await tryRealPayment(order);
+        if (outcome === 'failed') {
+            $('payStep2').classList.add('hidden');
+            $('payStep1').classList.remove('hidden');
+            err.textContent = 'The payment was not completed. Please check your phone and try again.';
+            err.classList.remove('hidden');
+            return;
+        }
+        if (outcome !== true && !(outcome && outcome.ok)) await new Promise(r => setTimeout(r, 4000));
     }
-    if (outcome !== true && !(outcome && outcome.ok)) await new Promise(r => setTimeout(r, 4000));
+    await redeemVoucher();   // consume the gift voucher once payment settles
 
     const ref = (outcome && outcome.ref) ? outcome.ref : 'SIM-' + Math.floor(100000 + Math.random() * 900000);
     try {
