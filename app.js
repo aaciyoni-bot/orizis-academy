@@ -294,7 +294,15 @@ let activeField = 'all';
 let searchTerm = '';
 let courseSort = 'featured';
 const FEATURED = ['build-with-claude','digital-marketing','english-for-work','bookkeeping-basics'];
-const courseImage = c => 'assets/course-' + ({web:'web',computer:'web',marketing:'marketing',service:'marketing',money:'marketing',english:'english',career:'english',finance:'finance',commerce:'finance',business:'finance',agriculture:'finance',tailoring:'marketing',beauty:'marketing'}[c?.field] || 'web') + '.webp';
+const courseImage = c => window.LernotoCourseImages?.get(c) || null;
+function courseImageMarkup(c, detail = false) {
+    const image = courseImage(c);
+    if (!image?.src) return '';
+    const sizes = detail
+        ? '(max-width: 760px) calc(100vw - 40px), (max-width: 1100px) calc(100vw - 380px), (max-width: 1250px) calc(100vw - 472px), 778px'
+        : '(max-width: 360px) calc(100vw - 28px), (max-width: 520px) calc(100vw - 40px), (max-width: 760px) calc((100vw - 52px) / 2), (max-width: 1100px) calc((100vw - 98px) / 4), (max-width: 1440px) calc((100vw - 138px) / 4), 326px';
+    return `<img src="${esc(image.src)}"${image.srcset ? ` srcset="${esc(image.srcset)}" sizes="${sizes}"` : ''} alt="${esc(image.alt)}" style="object-position:${esc(image.objectPosition || '50% 50%')}" width="960" height="640" decoding="async"${detail ? '' : ' loading="lazy"'}>`;
+}
 const durationLabel = c => 'about ' + (c.hours || 1) + ((c.hours || 1) === 1 ? ' hour' : ' hours');
 
 function buildCatNav() {
@@ -312,7 +320,7 @@ function courseCard(c) {
     const f = fieldOf(c), e = enrolledMap[c.id];
     const scholarship = c.scholarship && c.fullPriceZmw > c.priceZmw;
     return `<a class="studio-course-card" href="?c=${encodeURIComponent(c.id)}" onclick="event.preventDefault();OA.openCourse('${esc(c.id)}')">
-      <div class="studio-card-media"><img src="${courseImage(c)}" alt="" loading="lazy" width="640" height="360">${e ? `<span class="studio-enrolled">${e.status === 'completed' ? 'Completed' : 'Enrolled'}</span>` : ''}</div>
+      <div class="studio-card-media">${courseImageMarkup(c)}${e ? `<span class="studio-enrolled">${e.status === 'completed' ? 'Completed' : 'Enrolled'}</span>` : ''}</div>
       <div class="studio-card-body"><div class="studio-card-category">${esc(f.label)}</div>
         <div class="studio-card-main"><h3>${esc(c.title)}</h3><div class="studio-card-price"><strong>${fmtK(c.priceZmw).replace('.00','')}</strong>${scholarship ? '<small>Scholarship<br>application required</small>' : '<small>One-time payment</small>'}</div></div>
         <p class="studio-card-meta"><i class="far fa-clock" aria-hidden="true"></i> ${totalLessons(c)} lessons <span>·</span> ${durationLabel(c)}</p><p class="studio-card-award"><i class="fas fa-award" aria-hidden="true"></i> Certificate on completion</p>
@@ -389,7 +397,7 @@ async function openCourse(id) {
         <button onclick="OA.goHome()" class="text-sm font-bold text-ink-600 hover:underline mb-4"><i class="fas fa-arrow-left mr-1"></i>All courses</button>
         <div class="grid lg:grid-cols-3 gap-6">
             <div class="lg:col-span-2">
-                <div class="studio-detail-media"><img src="${courseImage(c)}" alt="" width="960" height="540"><span>${esc(c.level || 'Course')}</span></div>
+                <div class="studio-detail-media">${courseImageMarkup(c, true)}<span>${esc(c.level || 'Course')}</span></div>
                 <div class="studio-detail-meta"><span><i class="far fa-clock"></i> ${durationLabel(c)}</span><span><i class="fas fa-book-open"></i> ${lessons.length} lessons</span><span>Learn at your pace</span></div>
                 <div class="text-[11px] font-bold text-ink-500 uppercase tracking-wide mt-4">${esc(f.label)}</div>
                 <h2 class="text-2xl sm:text-3xl font-display font-extrabold mt-1">${esc(c.title)}</h2>

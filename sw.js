@@ -1,5 +1,5 @@
 /* Lernoto service worker - enables app installation and basic offline shell */
-const CACHE = 'lernoto-academic-identity-20260921';
+const CACHE = 'lernoto-course-images-20260921';
 
 self.addEventListener('install', e => {
     self.skipWaiting();
