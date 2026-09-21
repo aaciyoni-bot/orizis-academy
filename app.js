@@ -1220,11 +1220,51 @@ async function submitAuth() {
     }
 }
 
+let googleAuthPending = false;
 async function googleAuth() {
+    if (googleAuthPending) return;
     const err = $('authError');
+    err.textContent = '';
+    err.classList.add('hidden');
     if (MODE !== 'firebase') { err.textContent = 'Google sign-in needs the live site.'; err.classList.remove('hidden'); return; }
-    try { const p = new firebase.auth.GoogleAuthProvider(); await auth.signInWithPopup(p); /* onAuthStateChanged handles the rest */ }
-    catch (e) { err.textContent = friendlyAuthError(e); err.classList.remove('hidden'); }
+    const button = $('googleAuthBtn'), label = $('googleAuthLabel');
+    const previousLabel = label?.textContent || 'Continue with Google';
+    const wasDisabled = button?.disabled || false;
+    googleAuthPending = true;
+    if (button) { button.disabled = true; button.setAttribute('aria-busy', 'true'); }
+    if (label) label.textContent = 'Connecting to Google…';
+    try {
+        const provider = new firebase.auth.GoogleAuthProvider();
+        await auth.signInWithPopup(provider);
+        // onAuthStateChanged remains responsible for updating the signed-in session.
+    } catch (e) {
+        err.textContent = friendlyGoogleAuthError(e);
+        err.classList.remove('hidden');
+        // Keep credentials, email addresses and provider error payloads out of logs.
+        const code = typeof e?.code === 'string' && /^auth\/[a-z0-9-]+$/.test(e.code) ? e.code : 'auth/unknown';
+        console.warn('Google sign-in failed:', code);
+    } finally {
+        googleAuthPending = false;
+        if (button) { button.disabled = wasDisabled; button.setAttribute('aria-busy', 'false'); }
+        if (label) label.textContent = previousLabel;
+    }
+}
+
+function friendlyGoogleAuthError(e) {
+    const code = typeof e?.code === 'string' ? e.code : '';
+    if (code === 'auth/unauthorized-domain' || code === 'auth/auth-domain-config-required') return 'Google sign-in is not set up for this website yet. Please sign in with email or contact support.';
+    if (code === 'auth/operation-not-allowed') return 'Google sign-in is currently unavailable. Please sign in with email or contact support.';
+    if (code === 'auth/popup-blocked') return 'Your browser blocked the Google sign-in window. Allow pop-ups for Lernoto, then try again.';
+    if (code === 'auth/popup-closed-by-user') return 'The Google sign-in window was closed before completion. Please try again.';
+    if (code === 'auth/cancelled-popup-request') return 'Another Google sign-in attempt is already open. Complete that window or try again.';
+    if (code === 'auth/network-request-failed') return 'Google sign-in could not connect. Check your internet connection and try again.';
+    if (code === 'auth/web-storage-unsupported' || code === 'auth/unsupported-persistence-type') return 'Google sign-in needs browser storage. Allow cookies and site storage, or try your regular browser.';
+    if (code === 'auth/operation-not-supported-in-this-environment') return 'Google sign-in is not supported in this browser. Open Lernoto in your regular browser and try again.';
+    if (code === 'auth/account-exists-with-different-credential' || code === 'auth/credential-already-in-use') return 'This email uses another sign-in method. Sign in using that method first.';
+    if (code === 'auth/invalid-credential') return 'Google could not verify this sign-in. Please try again.';
+    if (code === 'auth/user-disabled') return 'This account is disabled. Please contact support.';
+    if (code === 'auth/too-many-requests') return 'Too many sign-in attempts. Please wait a moment and try again.';
+    return 'Google sign-in could not be completed. Please try again or sign in with email.';
 }
 
 function friendlyAuthError(e) {
