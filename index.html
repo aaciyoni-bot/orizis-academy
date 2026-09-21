@@ -5,11 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Lernoto — Build skills. Create your next chapter.</title>
     <meta name="description" content="Lernoto — affordable online courses for Zambia. Learn business, web building, digital marketing, English and job skills on your phone. Pay with Mobile Money and earn a Certificate of Completion.">
-    <link rel="manifest" href="manifest.json">
+    <link rel="manifest" href="manifest.json?v=20260921-academic">
     <meta name="theme-color" content="#06251e">
-    <link rel="icon" type="image/svg+xml" href="icon.svg">
-    <link rel="icon" type="image/png" href="icon-192.png">
-    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <link rel="icon" type="image/svg+xml" href="icon.svg?v=20260921-academic">
+    <link rel="icon" type="image/png" href="icon-192.png?v=20260921-academic">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png?v=20260921-academic">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Lernoto">
@@ -93,9 +93,9 @@
         @keyframes bounceDown { 0%,100% { transform: translateY(0); } 50% { transform: translateY(14px); } }
         @keyframes bounceUp { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-14px); } }
     </style>
-    <link rel="stylesheet" href="future-studio.css?v=20260921">
+    <link rel="stylesheet" href="future-studio.css?v=20260921-academic">
     <link rel="stylesheet" href="learner-hub.css?v=20260921-certificate">
-    <link rel="stylesheet" href="certificate-design.css?v=20260921">
+    <link rel="stylesheet" href="certificate-design.css?v=20260921-academic">
 </head>
 <body class="bg-ink-50 font-sans text-slate-800 min-h-screen flex flex-col">
 
@@ -103,7 +103,7 @@
     <header class="studio-header">
       <div class="studio-nav">
         <a href="./" onclick="goHome();return false" class="studio-brand" aria-label="Lernoto home">
-          <img src="icon.svg" alt="" width="44" height="44"><span><strong>Lernoto</strong><small>Learn it. Prove it.</small></span>
+          <img src="assets/lernoto-emblem.webp?v=20260921-academic" alt="" width="52" height="52"><span><strong>LERNOTO</strong><small>Learn it. Prove it.</small></span>
         </a>
         <nav class="studio-links" aria-label="Main navigation">
           <button class="studio-link active" onclick="goHome()" data-nav="courses">Courses</button>
@@ -301,9 +301,9 @@
     <footer class="bg-[#0b1020] text-ink-100/70 mt-auto">
         <div class="max-w-7xl mx-auto px-4 py-10 grid sm:grid-cols-3 gap-8 text-sm">
             <div>
-                <div class="flex items-center gap-2 mb-3">
-                    <img src="icon.svg" alt="logo" class="w-8 h-8 rounded-lg object-contain">
-                    <span class="font-display font-extrabold text-white text-lg">Lernoto</span>
+                <div class="studio-footer-brand mb-3">
+                    <img src="assets/lernoto-emblem.webp?v=20260921-academic" alt="" width="48" height="48">
+                    <span>LERNOTO</span>
                 </div>
                 <p class="text-ink-100/60">Affordable, practical online courses for Zambia. Learn a skill, earn a Certificate of Completion, and move your career or business forward.</p>
             </div>
@@ -335,7 +335,7 @@
     <div id="authModal" role="dialog" aria-modal="true" aria-labelledby="authTitle" class="fixed inset-0 bg-black/60 z-[70] hidden items-center justify-center p-4" onclick="if(event.target===this) closeAuth()">
         <div class="bg-white rounded-2xl w-full max-w-md overflow-hidden fade-in">
             <div class="bg-gradient-to-br from-ink-700 to-ink-900 text-white p-5">
-                <button type="button" class="studio-modal-close" onclick="closeAuth()" aria-label="Close account dialog"><i class="fas fa-xmark" aria-hidden="true"></i></button><h3 class="font-bold text-lg"><i class="fas fa-graduation-cap mr-2"></i><span id="authTitle">Log in to Lernoto</span></h3>
+                <button type="button" class="studio-modal-close" onclick="closeAuth()" aria-label="Close account dialog"><i class="fas fa-xmark" aria-hidden="true"></i></button><h3 class="studio-auth-brand"><img src="assets/lernoto-emblem.webp?v=20260921-academic" alt="" width="56" height="56"><span id="authTitle">Log in to Lernoto</span></h3>
                 <p class="text-ink-100/80 text-sm mt-1" id="authSubtitle">Save your progress and earn certificates.</p>
             </div>
             <div class="p-5 space-y-4">
@@ -551,7 +551,7 @@
 
     <!-- ======================= INSTALL BANNER (mobile) ======================= -->
     <div id="installBanner" class="hidden fixed bottom-0 left-0 right-0 z-40 bg-ink-900 text-white px-4 py-3 flex items-center gap-3 shadow-2xl">
-        <img src="icon-192.png" alt="" class="w-10 h-10 rounded-xl shrink-0">
+        <img src="icon-192.png?v=20260921-academic" alt="" class="w-10 h-10 rounded-xl shrink-0">
         <div class="flex-1 min-w-0">
             <p class="font-bold text-sm leading-tight">Get the Lernoto App 🇿🇲</p>
             <p class="text-[11px] text-ink-100/80 leading-tight">Learn from your home screen, anytime</p>
@@ -595,10 +595,11 @@
     <script src="config.js"></script>
     <script src="courses-data.js"></script>
     <script src="veripoints.js"></script>
-    <script src="certificate-design.js?v=20260921"></script>
+    <script src="lernoto-brand.js?v=20260921-academic"></script>
+    <script src="certificate-design.js?v=20260921-academic"></script>
     <script src="app.js?v=20260921-certificate"></script>
     <script src="future-studio.js?v=20260921"></script>
-    <script src="learner-hub.js?v=20260921-certificate"></script>
+    <script src="learner-hub.js?v=20260921-academic"></script>
 <!--reljob-legal-injected-->
 <div style="font-family:system-ui,sans-serif;font-size:12.5px;color:#8a8f99;text-align:center;padding:16px 12px;background:#0f1116;border-top:1px solid #23262e"><a href="terms.html" style="color:#aeb4bf;margin:0 8px;text-decoration:none">Terms</a><a href="privacy.html" style="color:#aeb4bf;margin:0 8px;text-decoration:none">Privacy</a><a href="refunds.html" style="color:#aeb4bf;margin:0 8px;text-decoration:none">Refunds</a><a href="accessibility.html" style="color:#aeb4bf;margin:0 8px;text-decoration:none">Accessibility</a><a href="mailto:office@orizisgroup.com" style="color:#aeb4bf;margin:0 8px;text-decoration:none">Contact</a><div style="margin-top:6px;color:#5c616b">ORIZIS TECHNOLOGIES LIMITED &middot; TPIN 2002580846 &middot; office@orizisgroup.com</div></div>
 </body>

@@ -110,15 +110,33 @@
       return false;
     }
   }
+  async function printableBrand() {
+    const emblem = window.LernotoBrand?.emblemDataUrl;
+    try {
+      if (!/^data:image\/(?:png|webp);base64,[A-Za-z0-9+/=\s]+$/i.test(emblem || '')) throw new Error('Emblem unavailable');
+      const image = new Image();
+      image.src = emblem;
+      await image.decode();
+      return `<img class="lh-print-emblem" src="${esc(emblem)}" width="48" height="48" alt="Lernoto academic crest">`;
+    } catch (_) {
+      const host = byId('myLearningView');
+      host?.querySelector('.lh-print-error')?.remove();
+      const error = document.createElement('p'); error.className = 'lh-print-error'; error.setAttribute('role','alert'); error.textContent = 'The Lernoto emblem could not be loaded. Refresh the page and try printing again.';
+      host?.querySelector('.learner-hub')?.prepend(error);
+      return null;
+    }
+  }
   async function printStudentCard() {
     if (!await refreshForPrint()) return;
+    const brand = await printableBrand(); if (!brand) return;
     const user = snapshot.user;
-    printDocument(`<section class="lh-printed-card"><header><strong>LERNOTO</strong><span>Student card</span></header><div class="lh-printed-card-body"><p>LEARN IT. PROVE IT.</p><h1>${esc(user.name || 'Learner')}</h1>${user.email ? `<div>${esc(user.email)}</div>` : ''}<dl><dt>Lernoto student ID</dt><dd>${esc(user.uid)}</dd></dl></div><footer>For identification within Lernoto. This is not a government-issued identity document.</footer></section>`, 'card');
+    printDocument(`<section class="lh-printed-card"><header><div class="lh-print-brand">${brand}<strong>LERNOTO</strong></div><span>Student card</span></header><div class="lh-printed-card-body"><p>LEARN IT. PROVE IT.</p><h1>${esc(user.name || 'Learner')}</h1>${user.email ? `<div>${esc(user.email)}</div>` : ''}<dl><dt>Lernoto student ID</dt><dd>${esc(user.uid)}</dd></dl></div><footer>For identification within Lernoto. This is not a government-issued identity document.</footer></section>`, 'card');
   }
   async function printCourseRecord() {
     if (!await refreshForPrint()) return;
+    const brand = await printableBrand(); if (!brand) return;
     const user = snapshot.user, certificates = certificateList();
-    printDocument(`<section class="lh-printed-record"><div class="lh-record-brand">LERNOTO <span>Learning record</span></div><h1>${esc(user.name || 'Learner')}</h1><p>${esc(user.email || '')}</p><p class="lh-record-id">Learner ID: ${esc(user.uid)}<br>Record prepared: ${esc(dateText(new Date()))}</p><table><thead><tr><th>Course</th><th>Status</th><th>Progress</th><th>Result</th><th>Enrolled</th><th>Certificate</th></tr></thead><tbody>${(snapshot.enrollments || []).map(enrollment => {
+    printDocument(`<section class="lh-printed-record"><div class="lh-record-brand"><div class="lh-print-brand">${brand}<strong>LERNOTO</strong></div><span>Learning record</span></div><h1>${esc(user.name || 'Learner')}</h1><p>${esc(user.email || '')}</p><p class="lh-record-id">Learner ID: ${esc(user.uid)}<br>Record prepared: ${esc(dateText(new Date()))}</p><table><thead><tr><th>Course</th><th>Status</th><th>Progress</th><th>Result</th><th>Enrolled</th><th>Certificate</th></tr></thead><tbody>${(snapshot.enrollments || []).map(enrollment => {
       const p = progress(enrollment), cert = certificates.find(item => item.certId === enrollment.certId || item.courseId === enrollment.courseId);
       return `<tr><td>${esc(courseFor(enrollment.courseId)?.title || enrollment.courseTitle || enrollment.courseId)}</td><td>${esc(statusText(enrollment))}</td><td>${p.total ? `${p.done}/${p.total} lessons` : 'Not recorded'}</td><td>${enrollment.status === 'completed' ? esc(scoreText(enrollment.scorePercent)) : '—'}</td><td>${esc(dateText(enrollment.createdAt))}</td><td>${cert ? `${esc(cert.certId)}<br>Issued ${esc(dateText(cert.issuedAt))}` : 'Not issued / unavailable'}</td></tr>`;
     }).join('') || '<tr><td colspan="6">No course enrolments recorded.</td></tr>'}</tbody></table><p class="lh-record-notice">This record reflects your Lernoto account at the time of printing. It is not a government- or TEVETA-accredited qualification.</p></section>`, 'record');
@@ -163,6 +181,7 @@
       const cert = certificateList().find(item => item.certId === target.dataset.certId);
       if (!cert) { render(); return; }
       if (action === 'print-certificate') {
+        if (!await printableBrand()) return;
         const qr = await window.OA?.certificateQrData?.(cert.certId);
         printDocument(certificateMarkup(cert, false, qr), 'certificate');
       }

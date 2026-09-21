@@ -55,13 +55,17 @@
     } catch (_) { return ''; }
   }
   function score(value) { return value !== null && value !== undefined && value !== '' && Number.isFinite(Number(value)) && Number(value) >= 0 && Number(value) <= 100 ? `${Number(value)}%` : ''; }
-  function logo(prefix) {
-    // Inline geometry and gradients from Lernoto's existing icon.svg.
-    return `<svg x="391" y="42" width="60" height="60" viewBox="0 0 1024 1024" aria-hidden="true"><defs>
-      <radialGradient id="${prefix}-badge" cx="0.3" cy="0.22" r="0.95"><stop offset="0" stop-color="#6f7ce8"/><stop offset="0.36" stop-color="#3c46c4"/><stop offset="0.72" stop-color="#242a8e"/><stop offset="1" stop-color="#111544"/></radialGradient>
-      <linearGradient id="${prefix}-logo-gold" x1="0" y1="0" x2="0.8" y2="1"><stop offset="0" stop-color="#fff4cd"/><stop offset="0.34" stop-color="#f3cd68"/><stop offset="0.7" stop-color="#c9992c"/><stop offset="1" stop-color="#8e6714"/></linearGradient>
-      <linearGradient id="${prefix}-logo-gold2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e8c25c"/><stop offset="0.5" stop-color="#b7871d"/><stop offset="1" stop-color="#7d5a10"/></linearGradient>
-      </defs><circle cx="512" cy="512" r="450" fill="url(#${prefix}-badge)"/><circle cx="512" cy="512" r="450" fill="none" stroke="url(#${prefix}-logo-gold)" stroke-width="24"/><circle cx="512" cy="512" r="410" fill="none" stroke="url(#${prefix}-logo-gold2)" stroke-width="14" stroke-dasharray="6 22" opacity="0.85"/><path d="M118 448 A450 450 0 0 1 542 62 A450 450 0 0 0 140 548 Z" fill="#fff" opacity="0.16"/><path d="M362 528 H662 V636 C662 700 592 730 512 730 C432 730 362 700 362 636 Z" fill="url(#${prefix}-logo-gold2)"/><path d="M362 528 H430 V690 C398 676 362 660 362 636 Z" fill="#fff" opacity="0.2"/><path d="M512 320 L836 448 L512 576 L188 448 Z" fill="url(#${prefix}-logo-gold)"/><path d="M512 320 L836 448 L512 576 Z" fill="#8e6714" opacity="0.25"/><path d="M836 448 V680 C836 706 812 720 800 748" fill="none" stroke="url(#${prefix}-logo-gold2)" stroke-width="16" stroke-linecap="round"/><circle cx="836" cy="452" r="22" fill="url(#${prefix}-logo-gold)"/><path d="M772 748 H830 L818 838 C816 856 786 856 784 838 Z" fill="url(#${prefix}-logo-gold)"/></svg>`;
+  function emblemDataUrl() {
+    const value = window.LernotoBrand?.emblemDataUrl;
+    if (!/^data:image\/(?:png|webp);base64,[A-Za-z0-9+/=\s]+$/i.test(value || '')) {
+      const error = new Error('The Lernoto emblem could not be loaded. Refresh the page and try again.');
+      error.code = 'LERNOTO_EMBLEM_UNAVAILABLE';
+      throw error;
+    }
+    return value;
+  }
+  function logo(emblem) {
+    return `<image x="379" y="28" width="84" height="84" preserveAspectRatio="xMidYMid meet" href="${xml(emblem)}" xlink:href="${xml(emblem)}" aria-label="Lernoto academic crest"/>`;
   }
   function rosette(cx, cy, outer, inner) {
     return Array.from({length:64}, (_, index) => { const angle = index / 64 * Math.PI * 2 - Math.PI / 2, r = index % 2 ? inner : outer; return `${(cx + Math.cos(angle) * r).toFixed(2)},${(cy + Math.sin(angle) * r).toFixed(2)}`; }).join(' ');
@@ -85,7 +89,7 @@
     return `<g role="img" aria-label="${xml(text)}" font-family="${sans}" font-size="${size}" font-weight="700" fill="#76501c">${glyphs}</g>`;
   }
   function svg(cert = {}, options = {}) {
-    const sample = !!options.sample, prefix = `lnc-${++sequence}`;
+    const sample = !!options.sample, prefix = `lnc-${++sequence}`, emblem = emblemDataUrl();
     const name = sample ? 'Your Name' : clean(cert.userName) || 'Name not recorded';
     const course = clean(cert.courseTitle) || 'Course title not recorded';
     const issued = sample ? '' : date(cert.issuedAt), result = sample ? '' : score(cert.scorePercent), id = sample ? '' : clean(cert.certId);
@@ -110,7 +114,7 @@
       <rect x="37" y="37" width="768" height="521" fill="none" stroke="#e1d3b4" stroke-width=".65"/>
       <g transform="translate(38 38)">${corner}</g><g transform="translate(804 38) scale(-1 1)">${corner}</g><g transform="translate(38 557) scale(1 -1)">${corner}</g><g transform="translate(804 557) scale(-1 -1)">${corner}</g>
       <path d="M98 43H342 M500 43H744" stroke="#c5a15a" stroke-width=".6"/><path d="M108 47H329 M513 47H734" stroke="#e1d1a8" stroke-width=".4"/>
-      ${logo(prefix)}
+      ${logo(emblem)}
       <text x="421" y="122" text-anchor="middle" font-family="${sans}" font-size="17" font-weight="700" letter-spacing="5" fill="#273448">LERNOTO</text>
       <text x="421" y="173" text-anchor="middle" font-family="${serif}" font-size="39" fill="#283445">Certificate of Completion</text>
       <text x="421" y="196" text-anchor="middle" font-family="${sans}" font-size="8.5" letter-spacing="3.2" fill="#875d24">LEARN IT. PROVE IT.</text>
@@ -131,13 +135,19 @@
       <circle cx="421" cy="484" r="31.5" fill="none" stroke="#fce7a2" stroke-width="1"/><circle cx="421" cy="484" r="27" fill="none" stroke="#ad8232" stroke-width=".6"/>
       ${sealLettering('LERNOTO',{cx:421,cy:484,radius:30,size:6.2,spacing:1.45})}
       ${sealLettering('LEARN · PROVE · GROW',{cx:421,cy:486,radius:28,size:5.2,spacing:.8,bottom:true})}
-      <path d="M402 480l19-8 19 8-19 8z M410 486v8c6 4 16 4 22 0v-8 M440 481v13" fill="none" stroke="#80591f" stroke-width="1.5" stroke-linejoin="round"/>
+      <image x="406" y="469" width="30" height="30" preserveAspectRatio="xMidYMid meet" href="${xml(emblem)}" xlink:href="${xml(emblem)}" aria-hidden="true"/>
       <g transform="translate(${qr ? 592 : 671} 484) rotate(-10)"><circle r="32" fill="none" stroke="#8e3041" stroke-width="1.4"/><circle r="27.5" fill="none" stroke="#a44855" stroke-width=".6"/><path d="M-21-10H21M-21 10H21" stroke="#a44855" stroke-width=".6"/><text y="3" text-anchor="middle" font-family="${serif}" font-size="10.2" font-weight="700" letter-spacing=".5" fill="#8b2d3e">LERNOTO</text><text y="-16" text-anchor="middle" font-family="${sans}" font-size="4.9" letter-spacing=".6" fill="#8b2d3e">LEARN IT.</text><text y="20" text-anchor="middle" font-family="${sans}" font-size="4.9" letter-spacing=".6" fill="#8b2d3e">PROVE IT.</text></g>
       ${qr ? `<rect x="694" y="449" width="70" height="70" rx="2" fill="#fff" stroke="#e1d5ba" stroke-width=".5"/><image x="699" y="454" width="60" height="60" href="${xml(qr)}" xlink:href="${xml(qr)}"/><text x="729" y="531" text-anchor="middle" font-family="${sans}" font-size="7" fill="#73765f">Scan to verify</text>` : !sample && url ? textBlock(url,{x:669,y:531,size:6.5,min:5.5,maxWidth:217,maxLines:2,lineHeight:8,fill:'#6d715e'}) : ''}
       <text x="421" y="552" text-anchor="middle" font-family="${sans}" font-size="6.6" fill="#76796a">Lernoto Certificate of Completion. Not a government- or TEVETA-accredited qualification.</text>
     </svg>`;
   }
-  function render(cert, options = {}) { return `<div class="lnc-certificate${options.sample ? ' lnc-certificate-sample' : ''}">${svg(cert,options)}</div>`; }
+  function render(cert, options = {}) {
+    try { return `<div class="lnc-certificate${options.sample ? ' lnc-certificate-sample' : ''}">${svg(cert,options)}</div>`; }
+    catch (error) {
+      if (error.code !== 'LERNOTO_EMBLEM_UNAVAILABLE') throw error;
+      return `<div class="lnc-render-error" role="alert"><strong>Certificate preview is unavailable.</strong><p>${xml(error.message)}</p></div>`;
+    }
+  }
   async function createPdf(cert, options = {}) {
     const jsPDF = window.jspdf?.jsPDF;
     if (!jsPDF) throw new Error('PDF export is not available yet. Please retry.');
