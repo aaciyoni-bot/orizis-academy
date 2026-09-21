@@ -55,6 +55,7 @@ let payMethod = 'momo';           // 'momo' | 'vp'
 let payAmount = 0;                 // ZMW to charge for the current checkout
 let scholCourse = null;            // course being applied for a scholarship
 let pendingScholarshipCourse = null;
+let pendingStudentHub = false;
 
 /* ---------- Helpers ---------- */
 const fmtK = n => 'K' + Number(n || 0).toLocaleString('en-ZM', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -279,6 +280,9 @@ const HOME_SECTIONS = ['heroSection', 'how-it-works', 'builder', 'about', 'faq',
 function showView(view) {
     VIEWS.forEach(v => $(v).classList.toggle('hidden', v !== view));
     const home = view === 'catalogView';
+    document.body.dataset.view = view;
+    if (home || view === 'myLearningView') { const link = new URL(location.href); link.searchParams.delete('c'); history.replaceState(null, '', link); document.title = home ? 'Lernoto — Build skills. Create your next chapter.' : 'My learning & certificates | Lernoto'; }
+    document.querySelectorAll('[data-nav]').forEach(el => el.classList.toggle('active', el.dataset.nav === (home ? 'courses' : 'learning') && (home || view === 'myLearningView' || view === 'learnView')));
     HOME_SECTIONS.forEach(s => { const el = $(s); if (el) el.classList.toggle('hidden', !home); });
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
@@ -288,46 +292,33 @@ function showView(view) {
    ================================================================ */
 let activeField = 'all';
 let searchTerm = '';
+let courseSort = 'featured';
+const FEATURED = ['build-with-claude','digital-marketing','english-for-work','bookkeeping-basics'];
+const courseImage = c => 'assets/course-' + ({web:'web',computer:'web',marketing:'marketing',service:'marketing',money:'marketing',english:'english',career:'english',finance:'finance',commerce:'finance',business:'finance',agriculture:'finance',tailoring:'marketing',beauty:'marketing'}[c?.field] || 'web') + '.webp';
+const durationLabel = c => 'about ' + (c.hours || 1) + ((c.hours || 1) === 1 ? ' hour' : ' hours');
 
 function buildCatNav() {
     const present = [...new Set(COURSES.map(c => c.field))];
     const nav = $('catNav');
-    let html = `<button class="cat-chip ${activeField === 'all' ? 'active' : ''}" onclick="OA.filterField('all')"><i class="fas fa-layer-group"></i> All courses</button>`;
+    let html = `<button aria-pressed="${activeField === 'all'}" class="cat-chip ${activeField === 'all' ? 'active' : ''}" onclick="OA.filterField('all')"><i class="fas fa-layer-group"></i> All courses</button>`;
     present.forEach(f => {
         const meta = FIELDS[f] || FIELDS._default;
-        html += `<button class="cat-chip ${activeField === f ? 'active' : ''}" onclick="OA.filterField('${f}')"><i class="fas ${meta.icon}"></i> ${esc(meta.label)}</button>`;
+        html += `<button aria-pressed="${activeField === f}" class="cat-chip ${activeField === f ? 'active' : ''}" onclick="OA.filterField('${f}')"><i class="fas ${meta.icon}"></i> ${esc(meta.label)}</button>`;
     });
     nav.innerHTML = html;
 }
 
 function courseCard(c) {
-    const f = fieldOf(c);
-    const e = enrolledMap[c.id];
-    const badge = e ? (e.status === 'completed'
-        ? `<span class="absolute top-2 right-2 bg-zam-green text-white text-[10px] font-bold px-2 py-0.5 rounded-full"><i class="fas fa-award"></i> Completed</span>`
-        : `<span class="absolute top-2 right-2 bg-white/90 text-ink-700 text-[10px] font-bold px-2 py-0.5 rounded-full"><i class="fas fa-play"></i> Enrolled</span>`)
-        : `<span class="absolute top-2 right-2 bg-white/90 text-ink-700 text-[10px] font-bold px-2 py-0.5 rounded-full"><i class="fas fa-clock"></i> ~${c.hours || 1}h</span>`;
-    return `
-    <div class="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition cursor-pointer group fade-in" onclick="OA.openCourse('${c.id}')">
-        <div class="h-32 bg-gradient-to-br ${f.grad} relative flex items-center justify-center">
-            <i class="fas ${f.icon} text-white/90 text-5xl"></i>
-            <span class="absolute top-2 left-2 bg-black/25 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">${esc(c.level || 'Course')}</span>
-            ${badge}
-        </div>
-        <div class="p-4">
-            <div class="text-[11px] font-bold text-ink-500 uppercase tracking-wide">${esc(f.label)}</div>
-            <h4 class="font-bold mt-1 leading-snug line-clamp-2 h-11">${esc(c.title)}</h4>
-            <p class="text-xs text-slate-500 mt-1 line-clamp-2 h-8">${esc(c.summary || '')}</p>
-            <div class="mt-3 flex items-center justify-between">
-                <span class="flex items-baseline gap-1.5">
-                    <span class="font-extrabold text-ink-700 text-lg">${fmtK(c.priceZmw)}</span>
-                    ${c.fullPriceZmw && c.fullPriceZmw > c.priceZmw ? `<span class="text-xs text-slate-400 line-through">${fmtK(c.fullPriceZmw)}</span>` : ''}
-                </span>
-                <span class="text-ink-600 text-sm font-bold group-hover:underline">View <i class="fas fa-arrow-right text-xs"></i></span>
-            </div>
-        </div>
-    </div>`;
+    const f = fieldOf(c), e = enrolledMap[c.id];
+    const scholarship = c.scholarship && c.fullPriceZmw > c.priceZmw;
+    return `<a class="studio-course-card" href="?c=${encodeURIComponent(c.id)}" onclick="event.preventDefault();OA.openCourse('${esc(c.id)}')">
+      <div class="studio-card-media"><img src="${courseImage(c)}" alt="" loading="lazy" width="640" height="360">${e ? `<span class="studio-enrolled">${e.status === 'completed' ? 'Completed' : 'Enrolled'}</span>` : ''}</div>
+      <div class="studio-card-body"><div class="studio-card-category">${esc(f.label)}</div>
+        <div class="studio-card-main"><h3>${esc(c.title)}</h3><div class="studio-card-price"><strong>${fmtK(c.priceZmw).replace('.00','')}</strong>${scholarship ? '<small>Scholarship<br>application required</small>' : '<small>One-time payment</small>'}</div></div>
+        <p class="studio-card-meta"><i class="far fa-clock" aria-hidden="true"></i> ${totalLessons(c)} lessons <span>·</span> ${durationLabel(c)}</p><p class="studio-card-award"><i class="fas fa-award" aria-hidden="true"></i> Certificate on completion</p>
+      </div></a>`;
 }
+function sortCourses(value) { courseSort = value; renderCatalog(); }
 
 function renderCatalog() {
     buildCatNav();
@@ -340,7 +331,13 @@ function renderCatalog() {
             (c.summary || '').toLowerCase().includes(t) ||
             (fieldOf(c).label || '').toLowerCase().includes(t));
     }
-    $('resultsTitle').textContent = activeField === 'all' && !searchTerm ? 'All courses'
+    if (courseSort === 'price-low') list.sort((a,b)=>a.priceZmw-b.priceZmw);
+    if (courseSort === 'price-high') list.sort((a,b)=>b.priceZmw-a.priceZmw);
+    if (courseSort === 'duration') list.sort((a,b)=>(a.hours||1)-(b.hours||1));
+    $('featuredSection').classList.toggle('hidden', activeField !== 'all' || !!searchTerm);
+    $('featuredGrid').innerHTML = FEATURED.map(courseById).filter(Boolean).map(courseCard).join('');
+    $('catalogTotal').textContent = COURSES.length;
+    $('resultsTitle').textContent = activeField === 'all' && !searchTerm ? 'Explore all courses'
         : (searchTerm ? `Results for "${searchTerm}"` : fieldOf({ field: activeField }).label);
     $('resultsCount').textContent = list.length + (list.length === 1 ? ' course' : ' courses');
     $('courseGrid').innerHTML = list.map(courseCard).join('');
@@ -392,10 +389,8 @@ async function openCourse(id) {
         <button onclick="OA.goHome()" class="text-sm font-bold text-ink-600 hover:underline mb-4"><i class="fas fa-arrow-left mr-1"></i>All courses</button>
         <div class="grid lg:grid-cols-3 gap-6">
             <div class="lg:col-span-2">
-                <div class="h-44 rounded-2xl bg-gradient-to-br ${f.grad} flex items-center justify-center relative overflow-hidden">
-                    <i class="fas ${f.icon} text-white/90 text-7xl"></i>
-                    <span class="absolute top-3 left-3 bg-black/25 text-white text-xs font-bold px-3 py-1 rounded-full">${esc(c.level || 'Course')}</span>
-                </div>
+                <div class="studio-detail-media"><img src="${courseImage(c)}" alt="" width="960" height="540"><span>${esc(c.level || 'Course')}</span></div>
+                <div class="studio-detail-meta"><span><i class="far fa-clock"></i> ${durationLabel(c)}</span><span><i class="fas fa-book-open"></i> ${lessons.length} lessons</span><span>Learn at your pace</span></div>
                 <div class="text-[11px] font-bold text-ink-500 uppercase tracking-wide mt-4">${esc(f.label)}</div>
                 <h2 class="text-2xl sm:text-3xl font-display font-extrabold mt-1">${esc(c.title)}</h2>
                 <p class="text-slate-600 mt-3 leading-relaxed">${esc(c.summary || '')}</p>
@@ -405,7 +400,7 @@ async function openCourse(id) {
                     ${(c.outcomes || []).map(o => `<div class="flex items-start gap-2 text-sm text-slate-600"><i class="fas fa-circle-check text-zam-green mt-0.5"></i><span>${esc(o)}</span></div>`).join('')}
                 </div>
 
-                <h3 class="font-bold text-lg mt-6 mb-3">Course content <span class="text-sm font-normal text-slate-400">· ${lessons.length} lessons · about ${c.hours || 1} hour</span></h3>
+                <h3 class="font-bold text-lg mt-6 mb-3">Course content <span class="text-sm font-normal text-slate-400">· ${lessons.length} lessons · ${durationLabel(c)}</span></h3>
                 <div class="space-y-3">${modulesHtml}</div>
             </div>
 
@@ -418,18 +413,21 @@ async function openCourse(id) {
                         <div class="text-3xl font-extrabold text-ink-700">${fmtK(c.priceZmw)}</div>
                         <p class="text-xs text-slate-400 mt-1">One-time payment · lifetime access</p>
                     `}
-                    <div class="mt-4">${cta}</div>
+                    ${isSchol ? `<p class="studio-scholarship-note">The reduced price requires an application. Create an account, tell us about your goals and complete the scholarship form before payment.</p>` : ''}<div class="mt-4">${cta}</div>
                     <ul class="mt-5 space-y-2 text-sm text-slate-600">
                         <li><i class="fas fa-mobile-screen text-ink-500 w-5"></i> Pay with Mobile Money</li>
-                        <li><i class="fas fa-clock text-ink-500 w-5"></i> ~${c.hours || 1} hour, learn at your pace</li>
-                        <li><i class="fas fa-file-circle-check text-ink-500 w-5"></i> Short exam (70% to pass)</li>
+                        <li><i class="fas fa-clock text-ink-500 w-5"></i> ${durationLabel(c)}, learn at your pace</li>
+                        <li><i class="fas fa-file-circle-check text-ink-500 w-5"></i> ${c.capstone ? 'Practical final project' : 'Short exam (70% to pass)'}</li>
                         <li><i class="fas fa-award text-ink-500 w-5"></i> Verifiable Certificate of Completion</li>
                     </ul>
+                    <button type="button" class="studio-certificate-link" onclick="LernotoStudent.showCertificateExample('${esc(c.id)}')"><i class="fas fa-award" aria-hidden="true"></i> Preview your certificate <i class="fas fa-arrow-right" aria-hidden="true"></i></button>
                     <p class="mt-4 text-[11px] text-slate-400 leading-relaxed">Certificate of Completion — not a government- or TEVETA-accredited qualification.</p>
                 </div>
             </div>
         </div>`;
     showView('courseView');
+    const link = new URL(location.href); link.searchParams.set('c', id); history.replaceState(null, '', link);
+    document.title = c.title + ' | Lernoto';
 }
 
 /* ================================================================
@@ -669,7 +667,7 @@ function afterEnrol() {
 function openScholarship(courseId) {
     const c = courseById(courseId);
     if (!c) return;
-    if (!currentUser) { pendingScholarshipCourse = courseId; openAuth('signup', 'Create an account to apply'); return; }
+    if (!currentUser) { pendingScholarshipCourse = courseId; openAuth('signup', 'Step 1 of 3: create your account. Next, complete the scholarship application; payment comes after approval.'); return; }
     scholCourse = c;
     $('scholPriceNote').innerHTML = 'Full price <span class="line-through opacity-70">' + fmtK(c.fullPriceZmw) + '</span> → your price <b class="text-gold-soft">' + fmtK(c.priceZmw) + '</b>';
     ['scholName', 'scholPhone', 'scholAge', 'scholEmail', 'scholTown', 'scholMotivation'].forEach(id => { if ($(id)) $(id).value = ''; });
@@ -1048,7 +1046,7 @@ function renderCertificate(cert, mentorMsg) {
         <div class="max-w-2xl mx-auto mt-5 flex flex-wrap gap-3 justify-center">
             <button onclick="OA.downloadCert('${cert.certId}')" class="bg-ink-600 hover:bg-ink-700 text-white font-bold px-6 py-3 rounded-xl transition"><i class="fas fa-download mr-2"></i>Download PDF</button>
             <a href="${verifyUrl(cert.certId)}" target="_blank" rel="noopener" class="bg-ink-100 text-ink-700 font-bold px-6 py-3 rounded-xl hover:bg-ink-200 transition"><i class="fas fa-shield-halved mr-2"></i>Verify online</a>
-            <button onclick="OA.goHome()" class="bg-white border border-slate-200 text-slate-600 font-bold px-6 py-3 rounded-xl hover:bg-slate-50 transition">More courses</button>
+            <button onclick="LernotoStudent.openHub()" class="bg-white border border-slate-200 text-slate-600 font-bold px-6 py-3 rounded-xl hover:bg-slate-50 transition">My certificates</button>
         </div>
         <p class="text-center text-xs text-slate-400 mt-4">Verification link: <span class="font-mono">${esc(verifyUrl(cert.certId))}</span></p>`;
 
@@ -1096,21 +1094,21 @@ async function downloadCert(certId) {
 
     // Background + borders
     doc.setFillColor(255, 255, 255); doc.rect(0, 0, W, H, 'F');
-    doc.setDrawColor(49, 46, 129); doc.setLineWidth(6); doc.rect(22, 22, W - 44, H - 44);   // ink-900
-    doc.setDrawColor(227, 174, 78); doc.setLineWidth(1.5); doc.rect(34, 34, W - 68, H - 68); // gold
+    doc.setDrawColor(6, 37, 30); doc.setLineWidth(6); doc.rect(22, 22, W - 44, H - 44);   // ink-900
+    doc.setDrawColor(154, 187, 46); doc.setLineWidth(1.5); doc.rect(34, 34, W - 68, H - 68); // gold
 
     // Header
-    doc.setTextColor(67, 56, 202);
+    doc.setTextColor(21, 70, 52);
     doc.setFont('helvetica', 'bold'); doc.setFontSize(30);
     doc.text('LERNOTO', W / 2, 96, { align: 'center' });
     doc.setTextColor(120, 120, 120); doc.setFontSize(12); doc.setFont('helvetica', 'normal');
     doc.text('C E R T I F I C A T E   O F   C O M P L E T I O N', W / 2, 120, { align: 'center' });
-    doc.setDrawColor(227, 174, 78); doc.setLineWidth(1); doc.line(W / 2 - 120, 132, W / 2 + 120, 132);
+    doc.setDrawColor(154, 187, 46); doc.setLineWidth(1); doc.line(W / 2 - 120, 132, W / 2 + 120, 132);
 
     // Body
     doc.setTextColor(90, 90, 90); doc.setFontSize(13);
     doc.text('This certifies that', W / 2, 176, { align: 'center' });
-    doc.setTextColor(49, 46, 129); doc.setFont('helvetica', 'bold'); doc.setFontSize(34);
+    doc.setTextColor(6, 37, 30); doc.setFont('helvetica', 'bold'); doc.setFontSize(34);
     doc.text(cert.userName, W / 2, 214, { align: 'center' });
     doc.setTextColor(90, 90, 90); doc.setFont('helvetica', 'normal'); doc.setFontSize(13);
     doc.text('has successfully completed the online course', W / 2, 246, { align: 'center' });
@@ -1129,7 +1127,7 @@ async function downloadCert(certId) {
     doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(120, 120, 120);
     doc.text('Verification code', 90, 526);
 
-    doc.setFont('helvetica', 'bold'); doc.setFontSize(12); doc.setTextColor(67, 56, 202);
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(12); doc.setTextColor(21, 70, 52);
     doc.text('Lernoto', W - 90, 470, { align: 'right' });
     doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(120, 120, 120);
     doc.text('an ORIZIS TECHNOLOGY brand', W - 90, 484, { align: 'right' });
@@ -1146,7 +1144,7 @@ async function downloadCert(certId) {
     doc.text('Lernoto Certificate of Completion. This is not a government- or TEVETA-accredited qualification. Verify online at ' + new URL('verify.html', location.href).href,
         W / 2, 556, { align: 'center' });
 
-    doc.save('ORIZIS-Academy-Certificate-' + cert.certId + '.pdf');
+    doc.save('Lernoto-Certificate-' + cert.certId + '.pdf');
 }
 
 // View an already-earned certificate (from My Learning / course page)
@@ -1158,13 +1156,7 @@ async function viewCertificateById(certId, courseId) {
         const raw = localStorage.getItem('oa_cert_' + certId);
         if (raw) cert = JSON.parse(raw);
     }
-    if (!cert) {
-        // Fallback: rebuild a display cert from the enrollment
-        const e = await Store.getEnrollment(courseId);
-        const c = courseById(courseId);
-        if (!e || !c) { showToast('Certificate not found.'); return; }
-        cert = { certId, userName: currentUser.name || 'Learner', courseTitle: c.title, level: c.level, scorePercent: e.scorePercent || 100, issuedAt: e.createdAt };
-    }
+    if (!cert) { showToast('Your certificate record could not be loaded. Please try again or contact support.'); return; }
     renderCertificate(cert);
 }
 
@@ -1172,6 +1164,7 @@ async function viewCertificateById(certId, courseId) {
    MY LEARNING
    ================================================================ */
 async function showMyLearning() {
+    if (window.LernotoStudent) return window.LernotoStudent.openHub();
     toggleAccountMenu(false);
     if (!currentUser) { openAuth('login', 'Log in to see your learning'); return; }
     showView('myLearningView');
@@ -1225,7 +1218,7 @@ function openAuth(mode, subtitle) {
     $('authError').classList.add('hidden');
     $('authName').value = ''; $('authEmail').value = ''; $('authPass').value = '';
     applyAuthMode();
-    if (subtitle) $('authSubtitle').textContent = subtitle;
+    $('authSubtitle').textContent = subtitle || 'Save your progress and continue learning on any device.';
     $('authDemoNote').classList.toggle('hidden', MODE !== 'local');
     $('authPassWrap').classList.toggle('hidden', MODE === 'local'); // no password needed in demo
     $('authModal').classList.remove('hidden');
@@ -1234,7 +1227,7 @@ function openAuth(mode, subtitle) {
 function closeAuth() { $('authModal').classList.add('hidden'); $('authModal').classList.remove('flex'); }
 function applyAuthMode() {
     const signup = authMode === 'signup';
-    $('authTitle').textContent = signup ? 'Create your Academy account' : 'Log in to Lernoto';
+    $('authTitle').textContent = signup ? 'Create your Lernoto account' : 'Log in to Lernoto';
     $('authNameWrap').classList.toggle('hidden', !signup);
     $('authToggleText').textContent = signup ? 'Already have an account?' : 'New here?';
     $('authToggleBtn').textContent = signup ? 'Log in' : 'Create an account';
@@ -1307,6 +1300,8 @@ async function onSignedIn(user) {
     if (pendingScholarshipCourse) {
         const id = pendingScholarshipCourse; pendingScholarshipCourse = null;
         openScholarship(id);
+    } else if (pendingStudentHub) {
+        pendingStudentHub = false; window.LernotoStudent?.openHub();
     } else if (pendingEnrollCourse) {
         const id = pendingEnrollCourse; pendingEnrollCourse = null;
         const c = courseById(id); if (c) openCheckout(c, c.priceZmw);
@@ -1345,9 +1340,9 @@ document.addEventListener('click', e => {
 /* ================================================================
    NAV / SEARCH / MISC
    ================================================================ */
-function goHome() { activeField = 'all'; searchTerm = ''; $('searchInput').value = ''; renderCatalog(); showView('catalogView'); }
-function doSearch() { searchTerm = $('searchInput').value.trim(); activeField = 'all'; renderCatalog(); showView('catalogView'); }
-function filterField(f) { activeField = f; searchTerm = ''; $('searchInput').value = ''; renderCatalog(); showView('catalogView'); }
+function goHome() { const link = new URL(location.href); link.searchParams.delete('c'); link.hash = ''; history.replaceState(null, '', link); document.title = 'Lernoto — Build skills. Create your next chapter.'; activeField = 'all'; searchTerm = ''; $('searchInput').value = ''; renderCatalog(); showView('catalogView'); }
+function doSearch() { searchTerm = $('searchInput').value.trim(); activeField = 'all'; renderCatalog(); showView('catalogView'); $('allCourses').scrollIntoView({behavior:'smooth'}); }
+function filterField(f) { activeField = f; searchTerm = ''; $('searchInput').value = ''; renderCatalog(); showView('catalogView'); $('allCourses').scrollIntoView({behavior:'smooth'}); }
 function scrollToCatalog() { showView('catalogView'); $('catalogView').scrollIntoView({ behavior: 'smooth' }); }
 
 /* ---------- PWA install ---------- */
@@ -1409,11 +1404,37 @@ function boot() {
     }
 }
 
+
+async function getStudentSnapshot() {
+    if (!currentUser) return null;
+    const user = { uid: currentUser.uid, name: currentUser.name, email: currentUser.email };
+    const enrollments = await Store.listEnrollments();
+    let certificates = [];
+    if (MODE === 'firebase') {
+        const query = await db.collection('certificates').where('userId', '==', user.uid).get();
+        certificates = query.docs.map(doc => doc.data());
+    } else {
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (!key || !key.startsWith('oa_cert_')) continue;
+            try { const cert = JSON.parse(localStorage.getItem(key)); if (cert.userId === user.uid) certificates.push(cert); } catch (_) {}
+        }
+    }
+    if (!currentUser || currentUser.uid !== user.uid) return null;
+    enrollments.forEach(enrollment => { enrolledMap[enrollment.courseId] = enrollment; });
+    return { user, enrollments, certificates, courses: COURSES };
+}
+function showStudentView() {
+    toggleAccountMenu(false);
+    if (!currentUser) { pendingStudentHub = true; openAuth('login', 'Log in to see your courses, certificates and student card.'); return false; }
+    showView('myLearningView'); return true;
+}
+
 // Public API (referenced by inline onclick handlers)
 window.OA = {
-    openCourse, enroll, openLearn, gotoLesson, prevLesson, completeCurrent,
+    getStudentSnapshot, showStudentView, openCourse, enroll, openLearn, gotoLesson, prevLesson, completeCurrent,
     startExam, submitExam, submitCapstone, downloadCert, viewCertificateById, showMyLearning,
-    filterField, goHome, openScholarship
+    filterField, sortCourses, goHome, openScholarship
 };
 window.openScholarship = openScholarship; window.closeScholarship = closeScholarship; window.submitScholarship = submitScholarship; window.scholarshipContinue = scholarshipContinue;
 // A few handlers used directly in HTML attributes:

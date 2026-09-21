@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Lernoto — Learn a Skill, Earn a Certificate 🇿🇲🎓</title>
+    <title>Lernoto — Build skills. Create your next chapter.</title>
     <meta name="description" content="Lernoto — affordable online courses for Zambia. Learn business, web building, digital marketing, English and job skills on your phone. Pay with Mobile Money and earn a Certificate of Completion.">
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#141d39">
+    <meta name="theme-color" content="#06251e">
     <link rel="icon" type="image/svg+xml" href="icon.svg">
     <link rel="icon" type="image/png" href="icon-192.png">
     <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -22,13 +22,13 @@
                 extend: {
                     colors: {
                         ink: {
-                            50: '#f3f6fc', 100: '#e3e9f7', 200: '#c5d0ec', 300: '#98abd9', 400: '#6b84c5',
-                            500: '#4b63ab', 600: '#374c8c', 700: '#2b3b6e', 800: '#1f2c53', 900: '#141d39'
+                            50: '#f3f7f4', 100: '#e4eee6', 200: '#c7d9cd', 300: '#9ab9a7', 400: '#67947e',
+                            500: '#35765d', 600: '#215c47', 700: '#154634', 800: '#0c3328', 900: '#06251e'
                         },
-                        gold: { DEFAULT: '#a8d33d', soft: '#cbe888', deep: '#7a9c24' },
+                        gold: { DEFAULT: '#dfff57', soft: '#e8ff98', deep: '#45670d' },
                         zam: { green: '#198a00', red: '#de2010', black: '#000000', orange: '#ef7d00' }
                     },
-                    fontFamily: { sans: ['Inter', 'sans-serif'], display: ['"Spectral"', 'serif'] }
+                    fontFamily: { sans: ['Inter', 'sans-serif'], display: ['Inter', 'sans-serif'] }
                 }
             }
         }
@@ -93,99 +93,62 @@
         @keyframes bounceDown { 0%,100% { transform: translateY(0); } 50% { transform: translateY(14px); } }
         @keyframes bounceUp { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-14px); } }
     </style>
+    <link rel="stylesheet" href="future-studio.css?v=20260921">
+    <link rel="stylesheet" href="learner-hub.css?v=20260921">
 </head>
 <body class="bg-ink-50 font-sans text-slate-800 min-h-screen flex flex-col">
 
-    <!-- ======================= TOP BAR ======================= -->
-    <div class="bg-ink-900 text-white text-xs sm:text-sm py-1.5 px-4 text-center">
-        <i class="fas fa-graduation-cap mr-1 text-gold-soft"></i> Learn a skill in about an hour · Pay with <b>MTN MoMo</b>, <b>Airtel Money</b> &amp; <b>Zamtel</b> · Earn a <b>Certificate of Completion</b>
-    </div>
-
-    <!-- ======================= HEADER ======================= -->
-    <header class="bg-white shadow-sm sticky top-0 z-40">
-        <div class="max-w-7xl mx-auto px-4 py-3 flex items-center gap-3 sm:gap-6">
-            <a href="#" onclick="goHome(); return false;" class="flex items-center gap-2 shrink-0">
-                <img src="icon.svg" alt="logo" class="w-10 h-10 rounded-xl object-contain">
-                <div class="hidden sm:block">
-                    <h1 class="text-xl font-display font-extrabold tracking-tight leading-none text-ink-900">Lernoto</h1>
-                    <p class="text-[10px] text-ink-600 font-semibold leading-none mt-1 tracking-wide uppercase">Learn it. Prove it.</p>
-                </div>
-            </a>
-
-            <div class="flex-1 relative">
-                <input id="searchInput" type="text" placeholder="Search courses — web, marketing, English..."
-                    class="w-full border-2 border-ink-500 rounded-full py-2.5 pl-5 pr-12 text-sm focus:outline-none focus:ring-2 focus:ring-ink-100"
-                    onkeydown="if(event.key==='Enter') doSearch()">
-                <button onclick="doSearch()" class="absolute right-1 top-1 bottom-1 bg-ink-600 hover:bg-ink-700 text-white rounded-full w-10 flex items-center justify-center transition">
-                    <i class="fas fa-search"></i>
-                </button>
-            </div>
-
-            <button onclick="showMyLearning()" class="hidden sm:inline-flex shrink-0 text-slate-600 hover:text-ink-600 transition text-sm font-bold items-center gap-1.5">
-                <i class="fas fa-book-open-reader text-lg"></i> My Learning
-            </button>
-
-            <!-- VeriPoints balance chip (hidden unless the plugin is on & connected) -->
-            <button id="vpChip" onclick="onVpChipClick()" class="hidden shrink-0 items-center gap-1.5 bg-gradient-to-br from-ink-700 to-ink-900 text-gold-soft font-bold text-sm px-3 py-1.5 rounded-full hover:brightness-110 transition">
-                <i class="fas fa-coins"></i> <span id="vpChipVal">0</span> <span class="hidden sm:inline text-white/70 font-semibold">pts</span>
-            </button>
-
-            <div class="relative shrink-0">
-                <button id="accountBtn" onclick="onAccountClick()" class="flex items-center gap-2 text-slate-600 hover:text-ink-600 transition font-bold text-sm">
-                    <i class="fas fa-circle-user text-2xl"></i>
-                    <span id="accountLabel" class="hidden sm:inline">Log in</span>
-                </button>
-                <div id="accountMenu" class="hidden absolute right-0 mt-2 w-52 bg-white rounded-xl shadow-xl border border-slate-100 py-2 z-50">
-                    <div id="accountMenuName" class="px-4 py-2 text-xs text-slate-400 border-b border-slate-100"></div>
-                    <button onclick="showMyLearning(); toggleAccountMenu(false)" class="w-full text-left px-4 py-2.5 text-sm hover:bg-ink-50 font-semibold"><i class="fas fa-book-open-reader mr-2 text-ink-600"></i>My Learning</button>
-                    <button onclick="doSignOut()" class="w-full text-left px-4 py-2.5 text-sm hover:bg-ink-50 font-semibold text-zam-red"><i class="fas fa-right-from-bracket mr-2"></i>Log out</button>
-                </div>
-            </div>
+    <a class="skip-link" href="#catalogView">Skip to courses</a>
+    <header class="studio-header">
+      <div class="studio-nav">
+        <a href="./" onclick="goHome();return false" class="studio-brand" aria-label="Lernoto home">
+          <img src="icon.svg" alt="" width="44" height="44"><span><strong>Lernoto</strong><small>Learn it. Prove it.</small></span>
+        </a>
+        <nav class="studio-links" aria-label="Main navigation">
+          <button class="studio-link active" onclick="goHome()" data-nav="courses">Courses</button>
+          <button class="studio-link" onclick="showMyLearning()" data-nav="learning">My learning &amp; certificates</button>
+        </nav>
+        <div class="studio-search" role="search">
+          <label class="sr-only" for="searchInput">Search courses</label>
+          <input id="searchInput" type="search" placeholder="Search courses — web, marketing, English…" onkeydown="if(event.key==='Enter') doSearch()">
+          <button onclick="doSearch()" aria-label="Search courses"><i class="fas fa-search" aria-hidden="true"></i></button>
         </div>
-
-        <!-- Category chips -->
-        <nav id="catNav" class="max-w-7xl mx-auto px-4 pb-2.5 flex gap-2 items-center overflow-x-auto no-scrollbar"></nav>
+        <button id="vpChip" onclick="onVpChipClick()" class="hidden studio-points"><i class="fas fa-coins"></i> <span id="vpChipVal">0</span> pts</button>
+        <div class="studio-account">
+          <button id="accountBtn" onclick="onAccountClick()" class="studio-link"><i class="fas fa-circle-user" aria-hidden="true"></i><span id="accountLabel">Log in</span></button>
+          <div id="accountMenu" class="hidden absolute right-0 mt-2 w-52 bg-white rounded-xl shadow-xl border border-slate-100 py-2 z-50">
+            <div id="accountMenuName" class="px-4 py-2 text-xs text-slate-500 border-b border-slate-100"></div>
+            <button onclick="showMyLearning();toggleAccountMenu(false)" class="w-full text-left px-4 py-3 text-sm font-semibold">My learning &amp; certificates</button>
+            <button onclick="doSignOut()" class="w-full text-left px-4 py-3 text-sm font-semibold text-zam-red">Log out</button>
+          </div>
+        </div>
+      </div>
     </header>
-
-    <!-- ======================= HERO ======================= -->
-    <section id="heroSection" class="relative overflow-hidden bg-ink-900 text-white">
-        <div class="absolute inset-0 bg-gradient-to-br from-ink-700 via-ink-900 to-[#0b1020]"></div>
-        <div class="absolute -top-24 -right-24 w-96 h-96 bg-ink-500/30 rounded-full blur-3xl"></div>
-        <div class="absolute -bottom-32 -left-20 w-96 h-96 bg-gold/20 rounded-full blur-3xl"></div>
-        <div class="relative max-w-7xl mx-auto px-4 py-12 sm:py-16 grid sm:grid-cols-2 gap-8 items-center">
-            <div>
-                <span class="inline-flex items-center gap-1.5 bg-white/10 backdrop-blur text-ink-100 text-xs font-bold px-3 py-1.5 rounded-full border border-white/10"><i class="fas fa-certificate text-gold-soft"></i> Real skills. Real certificate. Real opportunities.</span>
-                <h2 class="mt-4 text-3xl sm:text-5xl font-display font-extrabold leading-tight">Learn a skill,<br>earn a <span class="bg-gradient-to-r from-gold-soft to-white bg-clip-text text-transparent">certificate</span> 🇿🇲</h2>
-                <p class="mt-3 text-ink-100/90 text-sm sm:text-base max-w-md">Affordable online courses built for Zambia — business, web building, digital marketing, English and job skills. Study on your phone, pay in Kwacha with Mobile Money, and finish with a Certificate of Completion to show employers.</p>
-                <div class="mt-5 flex flex-wrap gap-3 text-sm font-semibold">
-                    <span class="bg-white/10 backdrop-blur px-4 py-2 rounded-full border border-white/10"><i class="fas fa-clock mr-1 text-gold-soft"></i> ~1 hour per course</span>
-                    <span class="bg-white/10 backdrop-blur px-4 py-2 rounded-full border border-white/10"><i class="fas fa-mobile-screen mr-1 text-green-400"></i> Mobile Money</span>
-                    <span class="bg-white/10 backdrop-blur px-4 py-2 rounded-full border border-white/10"><i class="fas fa-award mr-1 text-gold-soft"></i> Verifiable certificate</span>
-                </div>
-                <div class="mt-6 flex flex-wrap gap-3">
-                    <button onclick="scrollToCatalog()" class="bg-ink-600 hover:bg-ink-700 text-white font-bold px-6 py-3 rounded-full transition shadow-lg shadow-ink-900/40"><i class="fas fa-graduation-cap mr-1"></i> Browse courses</button>
-                    <a href="#how-it-works" class="inline-flex items-center text-sm font-bold text-white/90 hover:text-white underline underline-offset-4 px-2">How it works ↓</a>
-                </div>
-            </div>
-            <div class="hidden sm:grid grid-cols-3 gap-3 text-center text-sm">
-                <div class="bg-white/5 border border-white/10 rounded-2xl p-4 backdrop-blur"><div class="text-3xl text-gold-soft"><i class="fas fa-code"></i></div><p class="mt-2 font-semibold text-ink-50">Build websites</p></div>
-                <div class="bg-white/5 border border-white/10 rounded-2xl p-4 backdrop-blur"><div class="text-3xl text-green-400"><i class="fas fa-money-bill-trend-up"></i></div><p class="mt-2 font-semibold text-ink-50">Earn online</p></div>
-                <div class="bg-white/5 border border-white/10 rounded-2xl p-4 backdrop-blur"><div class="text-3xl text-ink-200"><i class="fas fa-briefcase"></i></div><p class="mt-2 font-semibold text-ink-50">Job skills</p></div>
-                <div class="bg-white/5 border border-white/10 rounded-2xl p-4 backdrop-blur col-span-3"><p class="font-semibold text-ink-50"><i class="fas fa-user-graduate text-gold-soft mr-1"></i> Top graduates can apply to the <b>ORIZIS Builder Network</b></p></div>
-            </div>
-        </div>
+    <section id="heroSection" class="studio-hero">
+      <img class="studio-hero-photo" src="assets/lernoto-hero.webp" alt="Three adult learners working together on a laptop" fetchpriority="high" width="1536" height="768">
+      <div class="studio-hero-content">
+        <p class="studio-eyebrow">Practical skills for real opportunities</p>
+        <h1>Build skills.<br><span>Create your<br>next chapter.</span></h1>
+        <p class="studio-hero-copy">Affordable online courses for Zambia — business, web building, digital marketing, English and job skills. Learn at your own pace and earn a certificate you can download, print and share.</p>
+        <div class="studio-hero-actions"><button class="studio-primary" onclick="scrollToCatalog()">Explore courses <i class="fas fa-arrow-right" aria-hidden="true"></i></button><p>Learn it. Complete it.<br>Show your achievement.</p></div>
+      </div>
     </section>
-
-    <!-- ======================= CATALOG (home) ======================= -->
-    <main id="catalogView" class="max-w-7xl mx-auto px-4 py-8 w-full flex-1">
-        <div class="flex items-center justify-between mb-4">
-            <h3 id="resultsTitle" class="text-xl font-bold">All courses</h3>
-            <span id="resultsCount" class="text-sm text-slate-400"></span>
-        </div>
-        <div id="courseGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
-        <div id="emptyState" class="hidden text-center py-16 text-slate-400">
-            <i class="fas fa-magnifying-glass text-4xl mb-3"></i><p>No courses match your search.</p>
-        </div>
+    <main id="catalogView" class="studio-catalog">
+      <section id="featuredSection" aria-labelledby="featuredTitle">
+        <div class="studio-section-heading"><div><p class="studio-eyebrow">Featured courses</p><h2 id="featuredTitle">Your next skill starts here.</h2></div><a href="#allCourses">View all <span id="catalogTotal">25</span> courses <i class="fas fa-arrow-right" aria-hidden="true"></i></a></div>
+        <div id="featuredGrid" class="studio-course-grid"></div>
+      </section>
+      <section class="studio-certificate-promo" aria-labelledby="certificatePromoTitle">
+        <div><p class="studio-eyebrow">Something to show for every skill</p><h2 id="certificatePromoTitle">Your skills. Your certificates.<br>Your next opportunity.</h2><p>Complete a course and its assessment to earn a personalised Certificate of Completion. Keep every achievement together in your student area.</p><button class="studio-primary" onclick="LernotoStudent.showCertificateExample('build-with-claude')">See a sample certificate <i class="fas fa-arrow-right" aria-hidden="true"></i></button></div>
+        <div class="studio-certificate-promises"><p><i class="fas fa-award" aria-hidden="true"></i> A certificate with your name and course</p><p><i class="fas fa-print" aria-hidden="true"></i> Download, print and share your achievements</p><p><i class="fas fa-folder-open" aria-hidden="true"></i> All your courses and certificates in one place</p><button onclick="showMyLearning()">Open my student area <i class="fas fa-arrow-right" aria-hidden="true"></i></button></div>
+      </section>
+      <section id="allCourses" aria-labelledby="resultsTitle">
+        <div class="studio-section-heading"><div><p class="studio-eyebrow">Find your direction</p><h2 id="resultsTitle">Explore all courses</h2></div><span id="resultsCount" role="status" aria-live="polite"></span></div>
+        <nav id="catNav" class="studio-categories" aria-label="Course categories"></nav>
+        <div class="studio-catalog-tools"><p>Choose a skill that moves you forward.</p><label for="courseSort">Sort by <select id="courseSort" onchange="OA.sortCourses(this.value)"><option value="featured">Recommended</option><option value="price-low">Price: low to high</option><option value="price-high">Price: high to low</option><option value="duration">Shortest first</option></select></label></div>
+        <div id="courseGrid" class="studio-course-grid"></div>
+        <div id="emptyState" class="hidden studio-empty"><i class="fas fa-magnifying-glass" aria-hidden="true"></i><h3>No courses found</h3><p>Try a different skill or browse the full catalogue.</p><button class="studio-primary" onclick="goHome()">Browse all courses</button></div>
+      </section>
     </main>
 
     <!-- ======================= COURSE DETAIL VIEW ======================= -->
@@ -213,7 +176,7 @@
                     <div class="text-4xl text-ink-500"><i class="fas fa-list-check"></i></div>
                     <div class="mt-3 text-xs font-bold text-ink-600">STEP 1</div>
                     <h4 class="font-bold mt-1">Choose a course</h4>
-                    <p class="text-sm text-slate-500 mt-1">Pick from business, web, marketing, English and job-skill courses — each about one hour.</p>
+                    <p class="text-sm text-slate-500 mt-1">Pick from business, web, marketing, English and job-skill courses — with clear lesson plans and practical outcomes.</p>
                 </div>
                 <div class="text-center p-5 rounded-2xl bg-ink-50">
                     <div class="text-4xl text-ink-500"><i class="fas fa-mobile-screen"></i></div>
@@ -260,8 +223,8 @@
     <section id="about" class="bg-ink-50 border-t border-ink-100">
         <div class="max-w-7xl mx-auto px-4 py-14 grid sm:grid-cols-2 gap-10 items-center">
             <div>
-                <h3 class="text-2xl sm:text-3xl font-display font-extrabold">About ORIZIS <span class="text-ink-600">Academy</span></h3>
-                <p class="mt-4 text-slate-600 leading-relaxed">Skills change lives — but training is often too expensive, too far away, or takes too long. Lernoto makes it simple: short, practical online courses you can finish in about an hour, on the phone you already own.</p>
+                <h3 class="text-2xl sm:text-3xl font-display font-extrabold">Learning that fits <span class="text-ink-600">your life</span></h3>
+                <p class="mt-4 text-slate-600 leading-relaxed">Skills change lives — but training is often too expensive, too far away, or takes too long. Lernoto makes it simple: practical online courses you can study at your own pace, on the phone you already own.</p>
                 <p class="mt-3 text-slate-600 leading-relaxed">Every course is built to be <b>useful the same day</b> — how to build a website, earn online, market a business, write a strong CV, or run the money side of a small shop. You pay a small fee in Kwacha with Mobile Money, learn at your own pace, pass a short exam, and earn a Certificate of Completion you can show to employers.</p>
                 <p class="mt-3 text-slate-600 leading-relaxed">Proudly part of <b>ORIZIS Technology</b>. 🇿🇲</p>
             </div>
@@ -297,7 +260,7 @@
                 </details>
                 <details class="faq-item">
                     <summary>How long does a course take?</summary>
-                    <p>Each course is designed to take about one hour, split into short lessons. You can start, stop and continue whenever it suits you — your progress is saved.</p>
+                    <p>Course lengths vary. Check the lesson count and estimated study time on each course page. You can start, stop and continue whenever it suits you — your progress is saved.</p>
                 </details>
                 <details class="faq-item">
                     <summary>What score do I need to pass?</summary>
@@ -368,10 +331,10 @@
     </footer>
 
     <!-- ======================= AUTH MODAL ======================= -->
-    <div id="authModal" class="fixed inset-0 bg-black/60 z-[70] hidden items-center justify-center p-4" onclick="if(event.target===this) closeAuth()">
+    <div id="authModal" role="dialog" aria-modal="true" aria-labelledby="authTitle" class="fixed inset-0 bg-black/60 z-[70] hidden items-center justify-center p-4" onclick="if(event.target===this) closeAuth()">
         <div class="bg-white rounded-2xl w-full max-w-md overflow-hidden fade-in">
             <div class="bg-gradient-to-br from-ink-700 to-ink-900 text-white p-5">
-                <h3 class="font-bold text-lg"><i class="fas fa-graduation-cap mr-2"></i><span id="authTitle">Log in to Lernoto</span></h3>
+                <button type="button" class="studio-modal-close" onclick="closeAuth()" aria-label="Close account dialog"><i class="fas fa-xmark" aria-hidden="true"></i></button><h3 class="font-bold text-lg"><i class="fas fa-graduation-cap mr-2"></i><span id="authTitle">Log in to Lernoto</span></h3>
                 <p class="text-ink-100/80 text-sm mt-1" id="authSubtitle">Save your progress and earn certificates.</p>
             </div>
             <div class="p-5 space-y-4">
@@ -631,7 +594,9 @@
     <script src="config.js"></script>
     <script src="courses-data.js"></script>
     <script src="veripoints.js"></script>
-    <script src="app.js"></script>
+    <script src="app.js?v=20260921"></script>
+    <script src="future-studio.js?v=20260921"></script>
+    <script src="learner-hub.js?v=20260921"></script>
 <!--reljob-legal-injected-->
 <div style="font-family:system-ui,sans-serif;font-size:12.5px;color:#8a8f99;text-align:center;padding:16px 12px;background:#0f1116;border-top:1px solid #23262e"><a href="terms.html" style="color:#aeb4bf;margin:0 8px;text-decoration:none">Terms</a><a href="privacy.html" style="color:#aeb4bf;margin:0 8px;text-decoration:none">Privacy</a><a href="refunds.html" style="color:#aeb4bf;margin:0 8px;text-decoration:none">Refunds</a><a href="accessibility.html" style="color:#aeb4bf;margin:0 8px;text-decoration:none">Accessibility</a><a href="mailto:office@orizisgroup.com" style="color:#aeb4bf;margin:0 8px;text-decoration:none">Contact</a><div style="margin-top:6px;color:#5c616b">ORIZIS TECHNOLOGIES LIMITED &middot; TPIN 2002580846 &middot; office@orizisgroup.com</div></div>
 </body>

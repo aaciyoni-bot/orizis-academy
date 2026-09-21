@@ -1,5 +1,5 @@
 /* Lernoto service worker - enables app installation and basic offline shell */
-const CACHE = 'orizis-academy-v1';
+const CACHE = 'lernoto-future-studio-20260921';
 
 self.addEventListener('install', e => {
     self.skipWaiting();
