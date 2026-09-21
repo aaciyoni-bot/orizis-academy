@@ -12,4 +12,4 @@
 .lh-example-actions .lh-button:not(.lh-button-secondary):hover{background:#6e1729}.lh-example-actions button:disabled{opacity:.6;cursor:wait}
 .lh-example-format{text-align:center;font-size:11px;color:#6e665d;margin:12px 0 0}.lh-sample-download-error{color:#942f29;font-size:13px;text-align:center;margin-top:12px}
 @media(max-width:600px){.lh-example-dialog{width:calc(100vw - 16px);padding:14px}.lh-example-heading h1{font-size:20px}.lh-example-copy{font-size:12px}.lh-example-dialog .lnc-certificate{max-width:100%}.lh-example-format{font-size:10px;line-height:1.5}.lh-example-actions .lh-button{flex:1;min-width:130px}}
-@media print{.lh-print-certificate{padding:0!important;width:297mm!important;height:210mm!important}.lh-print-certificate .lnc-certificate{width:297mm!important;height:210mm!important;max-width:none!important;margin:0!important;box-shadow:none!important;break-inside:avoid;page-break-inside:avoid}.lh-print-certificate svg{display:block;width:297mm!important;height:210mm!important;max-width:none!important}}
+
