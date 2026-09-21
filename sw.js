@@ -1,5 +1,5 @@
 /* Lernoto service worker - enables app installation and basic offline shell */
-const CACHE = 'lernoto-future-studio-20260921';
+const CACHE = 'lernoto-certificate-landscape-20260921';
 
 self.addEventListener('install', e => {
     self.skipWaiting();

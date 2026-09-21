@@ -1004,56 +1004,46 @@ async function issueCertificate(course, scorePercent, extra, mentorMsg) {
 }
 
 function renderCertificate(cert, mentorMsg) {
+    const design = window.LernotoCertificate;
+    if (!design || typeof design.render !== 'function') {
+        showToast('Certificate design could not be loaded. Please reload and try again.');
+        return;
+    }
     showView('certView');
+    const view = $('certView');
+    view.style.maxWidth = '1100px';
+    const verificationUrl = verifyUrl(cert.certId);
     const mentorCard = mentorMsg ? `
         <div class="max-w-2xl mx-auto mb-6 bg-ink-50 border border-ink-100 rounded-2xl p-5 flex gap-4">
             <div class="w-11 h-11 shrink-0 rounded-full bg-ink-700 text-white flex items-center justify-center text-lg"><i class="fas fa-user-tie"></i></div>
             <div><div class="font-bold text-ink-800 text-sm mb-1">Virtual mentor review</div>
             <p class="text-sm text-slate-600 leading-relaxed">${mentorMsg}</p></div>
         </div>` : '';
-    $('certView').innerHTML = `
+    view.innerHTML = `
         <div class="text-center mb-6">
             <div class="w-16 h-16 mx-auto rounded-full bg-zam-green flex items-center justify-center"><i class="fas fa-check text-white text-2xl"></i></div>
             <h2 class="text-2xl font-display font-extrabold mt-3">Congratulations, ${esc(cert.userName)}! 🎉</h2>
             <p class="text-slate-500 mt-1">You passed with ${cert.scorePercent}% and earned your Certificate of Completion.</p>
         </div>
         ${mentorCard}
-        <div id="certPreview" class="mx-auto max-w-2xl bg-white rounded-2xl shadow-lg overflow-hidden border-4 border-ink-800">
-            <div class="p-6 sm:p-10 text-center relative">
-                <div class="absolute inset-3 border-2 border-gold rounded-xl pointer-events-none"></div>
-                <div class="relative">
-                    <div class="text-ink-700 text-3xl"><i class="fas fa-graduation-cap"></i></div>
-                    <div class="font-display font-extrabold text-xl mt-1 tracking-wide">LERNOTO</div>
-                    <div class="text-[11px] tracking-[0.3em] text-slate-400 uppercase">Certificate of Completion</div>
-                    <p class="text-slate-500 text-sm mt-6">This certifies that</p>
-                    <p class="font-display font-extrabold text-2xl sm:text-3xl text-ink-800 mt-1">${esc(cert.userName)}</p>
-                    <p class="text-slate-500 text-sm mt-4">has successfully completed the online course</p>
-                    <p class="font-bold text-lg mt-1">${esc(cert.courseTitle)}</p>
-                    <p class="text-slate-500 text-sm mt-1">${esc(cert.level)} · Score: ${cert.scorePercent}%</p>
-                    <div class="flex items-center justify-between mt-8 text-left text-xs text-slate-500">
-                        <div>
-                            <div class="font-bold text-slate-700">${fmtDate(cert.issuedAt)}</div>
-                            <div>Date of issue</div>
-                            <div class="font-bold text-slate-700 mt-2">${esc(cert.certId)}</div>
-                            <div>Verification code</div>
-                        </div>
-                        <div id="certQr" class="shrink-0"></div>
-                    </div>
-                    <p class="text-[9px] text-slate-400 mt-6 leading-snug">Lernoto Certificate of Completion. This is not a government- or TEVETA-accredited qualification. Verify at ${esc(new URL('verify.html', location.href).href)}</p>
-                </div>
-            </div>
+        <div id="certPreview" class="mx-auto w-full" aria-label="Issued Certificate of Completion">
+            ${design.render(cert, { sample: false, verifyUrl: verificationUrl })}
         </div>
-        <div class="max-w-2xl mx-auto mt-5 flex flex-wrap gap-3 justify-center">
-            <button onclick="OA.downloadCert('${cert.certId}')" class="bg-ink-600 hover:bg-ink-700 text-white font-bold px-6 py-3 rounded-xl transition"><i class="fas fa-download mr-2"></i>Download PDF</button>
-            <a href="${verifyUrl(cert.certId)}" target="_blank" rel="noopener" class="bg-ink-100 text-ink-700 font-bold px-6 py-3 rounded-xl hover:bg-ink-200 transition"><i class="fas fa-shield-halved mr-2"></i>Verify online</a>
+        <div class="mx-auto mt-5 flex flex-wrap gap-3 justify-center">
+            <button id="certDownloadBtn" type="button" class="bg-ink-600 hover:bg-ink-700 text-white font-bold px-6 py-3 rounded-xl transition"><i class="fas fa-download mr-2"></i>Download PDF</button>
+            <a href="${esc(verificationUrl)}" target="_blank" rel="noopener" class="bg-ink-100 text-ink-700 font-bold px-6 py-3 rounded-xl hover:bg-ink-200 transition"><i class="fas fa-shield-halved mr-2"></i>Verify online</a>
             <button onclick="LernotoStudent.openHub()" class="bg-white border border-slate-200 text-slate-600 font-bold px-6 py-3 rounded-xl hover:bg-slate-50 transition">My certificates</button>
         </div>
-        <p class="text-center text-xs text-slate-400 mt-4">Verification link: <span class="font-mono">${esc(verifyUrl(cert.certId))}</span></p>`;
+        <p class="text-center text-xs text-slate-400 mt-4">Verification link: <span class="font-mono break-all">${esc(verificationUrl)}</span></p>`;
 
-    // Render on-screen QR
-    makeQr($('certQr'), verifyUrl(cert.certId), 84);
-    // Stash for PDF
     window._lastCert = cert;
+    $('certDownloadBtn').addEventListener('click', () => downloadCert(cert.certId));
+    const preview = $('certPreview');
+    // Keep the same issued record and design when the real verification QR is ready.
+    qrDataUrl(verificationUrl).then(qr => {
+        if (!qr || window._lastCert !== cert || $('certPreview') !== preview || view.classList.contains('hidden')) return;
+        preview.innerHTML = design.render(cert, { sample: false, verifyUrl: verificationUrl, qrDataUrl: qr });
+    }).catch(() => { /* the visible verification link remains available */ });
 }
 
 // Renders a QR into an element and returns nothing; used for on-screen preview.
@@ -1069,7 +1059,7 @@ function qrDataUrl(text) {
         const holder = document.createElement('div');
         holder.style.position = 'fixed'; holder.style.left = '-9999px'; holder.style.top = '0';
         document.body.appendChild(holder);
-        try { new QRCode(holder, { text, width: 200, height: 200, correctLevel: QRCode.CorrectLevel.M }); }
+        try { new QRCode(holder, { text, width: 400, height: 400, correctLevel: QRCode.CorrectLevel.M }); }
         catch (e) { document.body.removeChild(holder); return resolve(null); }
         setTimeout(() => {
             let url = null;
@@ -1085,66 +1075,17 @@ function qrDataUrl(text) {
 async function downloadCert(certId) {
     const cert = window._lastCert;
     if (!cert || cert.certId !== certId) { showToast('Certificate not ready.'); return; }
+    const design = window.LernotoCertificate;
+    if (!design || typeof design.download !== 'function') { showToast('Certificate design could not be loaded. Please reload and try again.'); return; }
     if (!window.jspdf) { showToast('PDF library not loaded.'); return; }
     showToast('Preparing your certificate…');
-    const qr = await qrDataUrl(verifyUrl(cert.certId));
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' }); // 842 x 595
-    const W = 842, H = 595;
-
-    // Background + borders
-    doc.setFillColor(255, 255, 255); doc.rect(0, 0, W, H, 'F');
-    doc.setDrawColor(6, 37, 30); doc.setLineWidth(6); doc.rect(22, 22, W - 44, H - 44);   // ink-900
-    doc.setDrawColor(154, 187, 46); doc.setLineWidth(1.5); doc.rect(34, 34, W - 68, H - 68); // gold
-
-    // Header
-    doc.setTextColor(21, 70, 52);
-    doc.setFont('helvetica', 'bold'); doc.setFontSize(30);
-    doc.text('LERNOTO', W / 2, 96, { align: 'center' });
-    doc.setTextColor(120, 120, 120); doc.setFontSize(12); doc.setFont('helvetica', 'normal');
-    doc.text('C E R T I F I C A T E   O F   C O M P L E T I O N', W / 2, 120, { align: 'center' });
-    doc.setDrawColor(154, 187, 46); doc.setLineWidth(1); doc.line(W / 2 - 120, 132, W / 2 + 120, 132);
-
-    // Body
-    doc.setTextColor(90, 90, 90); doc.setFontSize(13);
-    doc.text('This certifies that', W / 2, 176, { align: 'center' });
-    doc.setTextColor(6, 37, 30); doc.setFont('helvetica', 'bold'); doc.setFontSize(34);
-    doc.text(cert.userName, W / 2, 214, { align: 'center' });
-    doc.setTextColor(90, 90, 90); doc.setFont('helvetica', 'normal'); doc.setFontSize(13);
-    doc.text('has successfully completed the online course', W / 2, 246, { align: 'center' });
-    doc.setTextColor(30, 30, 30); doc.setFont('helvetica', 'bold'); doc.setFontSize(19);
-    doc.text(doc.splitTextToSize(cert.courseTitle, W - 220), W / 2, 278, { align: 'center' });
-    doc.setTextColor(120, 120, 120); doc.setFont('helvetica', 'normal'); doc.setFontSize(11);
-    doc.text((cert.level ? cert.level + '  ·  ' : '') + 'Score: ' + cert.scorePercent + '%', W / 2, 306, { align: 'center' });
-
-    // Footer left: date + code + signature
-    doc.setTextColor(30, 30, 30); doc.setFont('helvetica', 'bold'); doc.setFontSize(12);
-    doc.text(fmtDate(cert.issuedAt), 90, 470);
-    doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(120, 120, 120);
-    doc.text('Date of issue', 90, 484);
-    doc.setFont('helvetica', 'bold'); doc.setFontSize(12); doc.setTextColor(30, 30, 30);
-    doc.text(cert.certId, 90, 512);
-    doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(120, 120, 120);
-    doc.text('Verification code', 90, 526);
-
-    doc.setFont('helvetica', 'bold'); doc.setFontSize(12); doc.setTextColor(21, 70, 52);
-    doc.text('Lernoto', W - 90, 470, { align: 'right' });
-    doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(120, 120, 120);
-    doc.text('an ORIZIS TECHNOLOGY brand', W - 90, 484, { align: 'right' });
-
-    // QR centre-bottom
-    if (qr) {
-        doc.addImage(qr, 'PNG', W / 2 - 42, 430, 84, 84);
-        doc.setFontSize(8); doc.setTextColor(120, 120, 120);
-        doc.text('Scan to verify', W / 2, 524, { align: 'center' });
+    try {
+        const verificationUrl = verifyUrl(cert.certId);
+        const qr = await qrDataUrl(verificationUrl);
+        await design.download(cert, { sample: false, verifyUrl: verificationUrl, qrDataUrl: qr });
+    } catch (e) {
+        showToast('Your certificate PDF could not be prepared. Please try again.');
     }
-
-    // Disclaimer
-    doc.setFontSize(7.5); doc.setTextColor(150, 150, 150);
-    doc.text('Lernoto Certificate of Completion. This is not a government- or TEVETA-accredited qualification. Verify online at ' + new URL('verify.html', location.href).href,
-        W / 2, 556, { align: 'center' });
-
-    doc.save('Lernoto-Certificate-' + cert.certId + '.pdf');
 }
 
 // View an already-earned certificate (from My Learning / course page)
@@ -1434,6 +1375,7 @@ function showStudentView() {
 window.OA = {
     getStudentSnapshot, showStudentView, openCourse, enroll, openLearn, gotoLesson, prevLesson, completeCurrent,
     startExam, submitExam, submitCapstone, downloadCert, viewCertificateById, showMyLearning,
+    certificateQrData: certId => qrDataUrl(verifyUrl(certId)),
     filterField, sortCourses, goHome, openScholarship
 };
 window.openScholarship = openScholarship; window.closeScholarship = closeScholarship; window.submitScholarship = submitScholarship; window.scholarshipContinue = scholarshipContinue;

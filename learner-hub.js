@@ -3,7 +3,7 @@
   'use strict';
   const esc = value => String(value ?? '').replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
   const byId = id => document.getElementById(id);
-  let snapshot = null, activeTab = 'courses', requestId = 0;
+  let snapshot = null, activeTab = 'courses', requestId = 0, sampleCourse = null;
   const dateText = value => {
     if (!value) return 'Not recorded';
     const date = value && typeof value.toDate === 'function' ? value.toDate() : new Date(value.seconds ? value.seconds * 1000 : value);
@@ -91,8 +91,11 @@
     if (!root) { root = document.createElement('div'); root.id = 'lernoto-print-root'; document.body.append(root); }
     root.className = `lh-print-${kind}`;
     root.innerHTML = markup;
+    let pageStyle = byId('lernoto-print-page');
+    if (!pageStyle) { pageStyle = document.createElement('style'); pageStyle.id = 'lernoto-print-page'; document.head.append(pageStyle); }
+    pageStyle.textContent = kind === 'certificate' ? '@page { size: A4 landscape; margin: 0; }' : '@page { size: A4 portrait; margin: 12mm; }';
     document.body.classList.add('lh-printing');
-    try { window.print(); } catch (_) { document.body.classList.remove('lh-printing'); }
+    try { window.print(); } catch (_) { document.body.classList.remove('lh-printing'); pageStyle.remove(); }
   }
   async function refreshForPrint() {
     try {
@@ -120,15 +123,18 @@
       return `<tr><td>${esc(courseFor(enrollment.courseId)?.title || enrollment.courseTitle || enrollment.courseId)}</td><td>${esc(statusText(enrollment))}</td><td>${p.total ? `${p.done}/${p.total} lessons` : 'Not recorded'}</td><td>${enrollment.status === 'completed' ? esc(scoreText(enrollment.scorePercent)) : '—'}</td><td>${esc(dateText(enrollment.createdAt))}</td><td>${cert ? `${esc(cert.certId)}<br>Issued ${esc(dateText(cert.issuedAt))}` : 'Not issued / unavailable'}</td></tr>`;
     }).join('') || '<tr><td colspan="6">No course enrolments recorded.</td></tr>'}</tbody></table><p class="lh-record-notice">This record reflects your Lernoto account at the time of printing. It is not a government- or TEVETA-accredited qualification.</p></section>`, 'record');
   }
-  function certificateMarkup(cert, sample = false) {
-    return `<article class="lh-certificate-sheet${sample ? ' lh-certificate-sample' : ''}">${sample ? '<span class="lh-sample-watermark" aria-hidden="true">SAMPLE</span>' : ''}<div class="lh-cert-inner"><p class="lh-cert-brand">LERNOTO</p><h2>Certificate of Completion</h2><p class="lh-cert-intro">This certifies that</p><p class="lh-cert-name">${esc(sample ? 'Your Name' : cert.userName || snapshot?.user?.name || 'Learner')}</p><p>has successfully completed the online course</p><h3>${esc(cert.courseTitle)}</h3>${cert.level ? `<p>${esc(cert.level)}</p>` : ''}${sample ? '<p class="lh-sample-note">SAMPLE — for preview only. No certificate has been issued.</p><div class="lh-cert-footer"><span>Date of issue: shown after completion</span><span>Verification code: issued after completion</span></div>' : `<p>Result: ${esc(scoreText(cert.scorePercent))}</p><div class="lh-cert-footer"><span>Date of issue<br><strong>${esc(dateText(cert.issuedAt))}</strong></span><span>Verification code<br><strong>${esc(cert.certId)}</strong></span></div>`}<p class="lh-cert-disclaimer">Lernoto Certificate of Completion. This is not a government- or TEVETA-accredited qualification.</p></div></article>`;
+  function certificateMarkup(cert, sample = false, qrDataUrl = null) {
+    const record = {...cert, userName: sample ? 'Your Name' : cert.userName || snapshot?.user?.name || 'Learner'};
+    const verify = sample ? '' : new URL('verify.html', location.href).href + '?id=' + encodeURIComponent(cert.certId);
+    return window.LernotoCertificate.render(record, {sample, verifyUrl:verify, qrDataUrl});
   }
   function showCertificateExample(courseId) {
     const course = (window.COURSES || []).find(item => item.id === courseId) || (window.COURSES || [])[0];
     if (!course) return;
+    sampleCourse = course;
     let dialog = byId('lh-certificate-example');
     if (!dialog) { dialog = document.createElement('dialog'); dialog.id = 'lh-certificate-example'; dialog.className = 'lh-example-dialog'; document.body.append(dialog); dialog.addEventListener('click', event => { if (event.target === dialog) dialog.close(); }); }
-    dialog.innerHTML = `<div class="lh-example-heading"><div><p class="lh-eyebrow">See what you can earn</p><h1 id="lh-example-title">Your certificate, after completion</h1></div><button type="button" class="lh-dialog-close" aria-label="Close certificate example" data-lh-action="close-example"><i class="fas fa-xmark" aria-hidden="true"></i></button></div><p class="lh-example-copy">This sample shows the certificate design for ${esc(course.title)}. Your name, actual result, issue date and verification code are added only when you successfully complete the course.</p>${certificateMarkup({courseTitle:course.title,level:course.level},true)}<div class="lh-example-actions">${button('close-example','Back to the course')}</div>`;
+    dialog.innerHTML = `<div class="lh-example-heading"><div><p class="lh-eyebrow">See what you can earn</p><h1 id="lh-example-title">Your certificate, after completion</h1></div><button type="button" class="lh-dialog-close" aria-label="Close certificate example" data-lh-action="close-example"><i class="fas fa-xmark" aria-hidden="true"></i></button></div><p class="lh-example-copy">This sample shows the certificate design for ${esc(course.title)}. Your name, actual result, issue date and verification code are added only when you successfully complete the course.</p>${certificateMarkup({courseTitle:course.title,level:course.level},true)}<div class="lh-example-actions">${button('download-sample','Download sample PDF')}${button('close-example','Back to the course','',true)}</div><p class="lh-example-format">A4 landscape · The same design on screen, in your PDF and in print.</p>`;
     dialog.setAttribute('aria-labelledby','lh-example-title');
     if (!dialog.open) dialog.showModal();
   }
@@ -142,13 +148,24 @@
     if (action.startsWith('tab-')) { activeTab = action === 'tab-certificates' ? 'certificates' : 'courses'; render(); byId(`lh-${activeTab}-tab`)?.focus(); return; }
     if (action === 'print-card') { printStudentCard(); return; }
     if (action === 'print-record') { printCourseRecord(); return; }
+    if (action === 'download-sample') {
+      if (!sampleCourse || target.disabled) return;
+      target.disabled = true; const label = target.textContent; target.textContent = 'Preparing PDF…';
+      try { await window.LernotoCertificate.download({courseTitle:sampleCourse.title,level:sampleCourse.level}, {sample:true}); }
+      catch (_) { let error = byId('lh-sample-error'); if (!error) { error = document.createElement('p'); error.id = 'lh-sample-error'; error.setAttribute('role','alert'); error.className = 'lh-sample-download-error'; byId('lh-certificate-example')?.append(error); } error.textContent = 'The PDF could not be prepared. Please try again.'; }
+      finally { target.disabled = false; target.textContent = label; }
+      return;
+    }
     if (action === 'close-example') { byId('lh-certificate-example')?.close(); return; }
     if (action === 'learn') { window.OA?.openLearn?.(target.dataset.courseId); return; }
     if (action === 'view-certificate' || action === 'print-certificate') {
       if (!await refreshForPrint()) return;
       const cert = certificateList().find(item => item.certId === target.dataset.certId);
       if (!cert) { render(); return; }
-      if (action === 'print-certificate') printDocument(certificateMarkup(cert), 'certificate');
+      if (action === 'print-certificate') {
+        const qr = await window.OA?.certificateQrData?.(cert.certId);
+        printDocument(certificateMarkup(cert, false, qr), 'certificate');
+      }
       else await window.OA?.viewCertificateById?.(cert.certId, cert.courseId);
     }
   });
@@ -158,6 +175,6 @@
     activeTab = event.key === 'Home' ? 'courses' : event.key === 'End' ? 'certificates' : activeTab === 'courses' ? 'certificates' : 'courses';
     render(); byId(`lh-${activeTab}-tab`)?.focus();
   });
-  window.addEventListener('afterprint', () => document.body.classList.remove('lh-printing'));
+  window.addEventListener('afterprint', () => { document.body.classList.remove('lh-printing'); byId('lernoto-print-page')?.remove(); });
   window.LernotoStudent = {openHub, showCertificateExample, printStudentCard, printCourseRecord};
 })();
