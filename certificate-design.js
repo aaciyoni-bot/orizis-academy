@@ -66,6 +66,24 @@
   function rosette(cx, cy, outer, inner) {
     return Array.from({length:64}, (_, index) => { const angle = index / 64 * Math.PI * 2 - Math.PI / 2, r = index % 2 ? inner : outer; return `${(cx + Math.cos(angle) * r).toFixed(2)},${(cy + Math.sin(angle) * r).toFixed(2)}`; }).join(' ');
   }
+  function sealLettering(text, {cx, cy, radius, size, spacing, bottom = false}) {
+    // Arial Bold advances keep this small brand mark stable across SVG renderers.
+    // Each glyph follows the original circular baseline without textPath support.
+    const advances = {' ': .27783, '·': .27783, A: .72217, E: .66699, G: .77783, L: .61084, N: .72217, O: .77783, P: .66699, R: .72217, T: .61084, V: .66699, W: .94385};
+    const letters = [...text], widths = letters.map(letter => (advances[letter] || .66699) * size);
+    const total = widths.reduce((sum, value) => sum + value, 0) + spacing * (letters.length - 1);
+    let offset = -total / 2;
+    const glyphs = letters.map((letter, index) => {
+      const distance = offset + widths[index] / 2;
+      offset += widths[index] + spacing;
+      if (letter === ' ') return '';
+      const angle = bottom ? Math.PI / 2 - distance / radius : Math.PI * 1.5 + distance / radius;
+      const x = (cx + radius * Math.cos(angle)).toFixed(3), y = (cy + radius * Math.sin(angle)).toFixed(3);
+      const rotation = ((bottom ? angle - Math.PI / 2 : angle - Math.PI * 1.5) * 180 / Math.PI).toFixed(3);
+      return `<text x="${x}" y="${y}" text-anchor="middle" transform="rotate(${rotation} ${x} ${y})" aria-hidden="true">${xml(letter)}</text>`;
+    }).join('');
+    return `<g role="img" aria-label="${xml(text)}" font-family="${sans}" font-size="${size}" font-weight="700" fill="#76501c">${glyphs}</g>`;
+  }
   function svg(cert = {}, options = {}) {
     const sample = !!options.sample, prefix = `lnc-${++sequence}`;
     const name = sample ? 'Your Name' : clean(cert.userName) || 'Name not recorded';
@@ -83,7 +101,6 @@
         <linearGradient id="${prefix}-paper" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fffefa"/><stop offset=".55" stop-color="#fffdf7"/><stop offset="1" stop-color="#f6f0e3"/></linearGradient>
         <linearGradient id="${prefix}-gold" x1="0" y1="0" x2=".8" y2="1"><stop offset="0" stop-color="#9c6d20"/><stop offset=".2" stop-color="#e4c77f"/><stop offset=".42" stop-color="#b88b36"/><stop offset=".66" stop-color="#f5df9e"/><stop offset="1" stop-color="#ab7a28"/></linearGradient>
         <radialGradient id="${prefix}-seal-gold" cx=".35" cy=".25" r=".85"><stop offset="0" stop-color="#fff1b6"/><stop offset=".4" stop-color="#e4bf65"/><stop offset=".76" stop-color="#c49235"/><stop offset="1" stop-color="#e9c975"/></radialGradient>
-        <path id="${prefix}-seal-top" d="M391 484 A30 30 0 0 1 451 484"/><path id="${prefix}-seal-bottom" d="M393 486 A28 28 0 0 0 449 486"/>
       </defs>
       <rect width="842" height="595" fill="url(#${prefix}-paper)"/>
       <path d="M0 0H100L0 100Z M842 595H742L842 495Z" fill="#781e32"/>
@@ -98,7 +115,7 @@
       <text x="421" y="173" text-anchor="middle" font-family="${serif}" font-size="39" fill="#283445">Certificate of Completion</text>
       <text x="421" y="196" text-anchor="middle" font-family="${sans}" font-size="8.5" letter-spacing="3.2" fill="#875d24">LEARN IT. PROVE IT.</text>
       <path d="M288 215H393 M449 215H554" stroke="#b28a42" stroke-width=".8"/><path d="M405 215l16-4 16 4-16 4z" fill="none" stroke="#b28a42" stroke-width=".8"/><circle cx="421" cy="215" r="1.8" fill="#9e7130"/>
-      ${sample ? '<text x="421" y="362" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="102" font-weight="700" letter-spacing="12" fill="#a37434" opacity=".075" transform="rotate(-14 421 335)">SAMPLE</text>' : ''}
+      ${sample ? '<text x="421" y="362" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="102" font-weight="700" letter-spacing="12" fill="#f8f3e8" transform="rotate(-14 421 335)">SAMPLE</text>' : ''}
       <text x="421" y="245" text-anchor="middle" font-family="${serif}" font-size="13" font-style="italic" fill="#68706e">This certifies that</text>
       ${textBlock(name,{y:284,size:32,min:18,maxWidth:650,maxLines:2,family:serif,weight:700,fill:'#253548'})}
       <path d="M222 314H620" stroke="#ddcba8" stroke-width=".7"/>
@@ -112,8 +129,8 @@
       <polygon points="${rosette(421,484,43,39)}" fill="url(#${prefix}-gold)" stroke="#a97828" stroke-width=".7"/>
       <circle cx="421" cy="484" r="36" fill="url(#${prefix}-seal-gold)" stroke="#b68b37" stroke-width=".8"/>
       <circle cx="421" cy="484" r="31.5" fill="none" stroke="#fce7a2" stroke-width="1"/><circle cx="421" cy="484" r="27" fill="none" stroke="#ad8232" stroke-width=".6"/>
-      <text font-family="${sans}" font-size="6.2" font-weight="700" letter-spacing="1.45" fill="#76501c"><textPath xlink:href="#${prefix}-seal-top" startOffset="50%" text-anchor="middle">LERNOTO</textPath></text>
-      <text font-family="${sans}" font-size="5.2" font-weight="700" letter-spacing=".8" fill="#76501c"><textPath xlink:href="#${prefix}-seal-bottom" startOffset="50%" text-anchor="middle">LEARN · PROVE · GROW</textPath></text>
+      ${sealLettering('LERNOTO',{cx:421,cy:484,radius:30,size:6.2,spacing:1.45})}
+      ${sealLettering('LEARN · PROVE · GROW',{cx:421,cy:486,radius:28,size:5.2,spacing:.8,bottom:true})}
       <path d="M402 480l19-8 19 8-19 8z M410 486v8c6 4 16 4 22 0v-8 M440 481v13" fill="none" stroke="#80591f" stroke-width="1.5" stroke-linejoin="round"/>
       <g transform="translate(${qr ? 592 : 671} 484) rotate(-10)"><circle r="32" fill="none" stroke="#8e3041" stroke-width="1.4"/><circle r="27.5" fill="none" stroke="#a44855" stroke-width=".6"/><path d="M-21-10H21M-21 10H21" stroke="#a44855" stroke-width=".6"/><text y="3" text-anchor="middle" font-family="${serif}" font-size="10.2" font-weight="700" letter-spacing=".5" fill="#8b2d3e">LERNOTO</text><text y="-16" text-anchor="middle" font-family="${sans}" font-size="4.9" letter-spacing=".6" fill="#8b2d3e">LEARN IT.</text><text y="20" text-anchor="middle" font-family="${sans}" font-size="4.9" letter-spacing=".6" fill="#8b2d3e">PROVE IT.</text></g>
       ${qr ? `<rect x="694" y="449" width="70" height="70" rx="2" fill="#fff" stroke="#e1d5ba" stroke-width=".5"/><image x="699" y="454" width="60" height="60" href="${xml(qr)}" xlink:href="${xml(qr)}"/><text x="729" y="531" text-anchor="middle" font-family="${sans}" font-size="7" fill="#73765f">Scan to verify</text>` : !sample && url ? textBlock(url,{x:669,y:531,size:6.5,min:5.5,maxWidth:217,maxLines:2,lineHeight:8,fill:'#6d715e'}) : ''}
