@@ -56,12 +56,119 @@ let payAmount = 0;                 // ZMW to charge for the current checkout
 let scholCourse = null;            // course being applied for a scholarship
 let pendingScholarshipCourse = null;
 let pendingStudentHub = false;
+let authSessionVersion = 0;
+let observedAuthUser;
+let examReviewRequest = 0;
+let activeExam = null;
 
 /* ---------- Helpers ---------- */
 const fmtK = n => 'K' + Number(n || 0).toLocaleString('en-ZM', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
 const courseById = id => COURSES.find(c => c.id === id);
 const fmtDate = d => new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+
+// Exam review permission is derived only from the current Firebase ID token.
+// It is never persisted or inferred from the local/demo account display data.
+function isExamCurrent(exam) {
+    return !!(exam && exam.user && activeExam === exam && currentUser === exam.user &&
+        authSessionVersion === exam.sessionVersion && learnCourse === exam.course &&
+        document.body.dataset.view === 'quizView' &&
+        (MODE !== 'firebase' || (auth.currentUser === exam.authUser && exam.authUser?.uid === exam.user?.uid)));
+}
+
+function clearExamReview(exam) {
+    if (!exam) return;
+    (exam.reviewInputs || []).forEach(input => {
+        if (!exam.touchedQuestions?.has(input.name)) input.checked = false;
+    });
+    (exam.reviewLabels || []).forEach(label => { label.style.borderColor = ''; label.style.backgroundColor = ''; });
+    (exam.reviewNodes || []).forEach(node => node.remove());
+    exam.reviewInputs = []; exam.reviewLabels = []; exam.reviewNodes = [];
+}
+
+function resetExamSession(message) {
+    examReviewRequest++;
+    const hadExam = !!activeExam;
+    clearExamReview(activeExam);
+    activeExam = null;
+    if (hadExam && $('quizView')) {
+        $('quizView').innerHTML = message && document.body.dataset.view === 'quizView'
+            ? `<div class="bg-white rounded-2xl border border-ink-100 p-6"><p class="font-semibold">${esc(message)}</p><button onclick="showMyLearning()" class="mt-4 text-ink-600 font-bold hover:underline">My learning</button></div>` : '';
+    }
+}
+
+function beginExamSession(course, formId, prefix, questions) {
+    resetExamSession();
+    activeExam = { course, formId, prefix, questions, user: currentUser,
+        authUser: MODE === 'firebase' ? auth.currentUser : null,
+        sessionVersion: authSessionVersion, submitting: false, touchedQuestions: new Set() };
+    return activeExam;
+}
+
+async function applyAdminExamReview(exam) {
+    const request = ++examReviewRequest;
+    const form = exam && $(exam.formId);
+    if (form && !exam.trackingChanges) {
+        exam.trackingChanges = true;
+        form.addEventListener('change', event => {
+            if (event.target.type === 'radio') exam.touchedQuestions.add(event.target.name);
+        });
+    }
+    const user = exam?.authUser;
+    const ownerEmail = 'aaci.yoni@gmail.com';
+    const normalize = value => typeof value === 'string' ? value.trim().toLowerCase() : '';
+    if (!isExamCurrent(exam) || exam.submitting || MODE !== 'firebase' || !user || user.isAnonymous ||
+        user.emailVerified !== true || normalize(user.email) !== ownerEmail || typeof user.getIdTokenResult !== 'function') return;
+    let result;
+    try { result = await user.getIdTokenResult(); } catch (_) { return; }
+    if (request !== examReviewRequest || !isExamCurrent(exam) || exam.submitting) return;
+    const claims = result?.claims;
+    if (!claims || claims.sub !== user.uid || normalize(claims.email) !== ownerEmail ||
+        claims.email_verified !== true || claims.firebase?.sign_in_provider !== 'google.com') return;
+    if (!form || !exam.questions.length) return;
+    clearExamReview(exam);
+    const notice = document.createElement('div');
+    notice.className = 'mt-4 rounded-xl border border-ink-200 bg-ink-50 p-4 text-sm text-ink-800';
+    notice.setAttribute('role', 'status');
+    const heading = document.createElement('strong');
+    heading.textContent = 'Admin exam review';
+    const explanation = document.createElement('p');
+    explanation.className = 'mt-1';
+    explanation.textContent = 'Correct answers are marked and selected for your review. You can change them. Submit when you are ready; your selected answers are graded normally.';
+    notice.append(heading, explanation);
+    form.before(notice);
+    exam.reviewNodes = [notice];
+    exam.questions.forEach((question, index) => {
+        if (!Number.isInteger(question.answer) || question.answer < 0 || question.answer >= (question.options || []).length) return;
+        const input = form.querySelector(`input[name="${exam.prefix}${index}"][value="${question.answer}"]`);
+        const label = input?.closest('label');
+        if (!input || !label) return;
+        if (!exam.touchedQuestions.has(input.name)) input.checked = true;
+        label.style.borderColor = '#23734a';
+        label.style.backgroundColor = '#edf7ef';
+        const badge = document.createElement('span');
+        badge.className = 'ml-auto shrink-0 text-xs font-bold text-green-800';
+        badge.textContent = 'Correct answer';
+        label.append(badge);
+        exam.reviewInputs.push(input); exam.reviewLabels.push(label); exam.reviewNodes.push(badge);
+    });
+}
+
+function handleFirebaseSession(user) {
+    const identityChanged = observedAuthUser !== user;
+    observedAuthUser = user;
+    examReviewRequest++;
+    clearExamReview(activeExam);
+    if (identityChanged) {
+        authSessionVersion++;
+        resetExamSession('Your sign-in changed. Open the exam again from your courses.');
+        if (user) onSignedIn({ uid: user.uid, name: user.displayName || (user.email ? user.email.split('@')[0] : 'Learner'), email: user.email });
+        else { currentUser = null; enrolledMap = {}; scholarshipMap = {}; updateAccountUi(); }
+    } else if (activeExam) {
+        // Token/provider changes revoke old markings before checking the new token.
+        applyAdminExamReview(activeExam);
+    }
+}
 
 function showToast(msg) {
     const t = $('toast');
@@ -210,7 +317,7 @@ const Store = {
             try {
                 const snap = await db.collection('enrollments').doc(enrollDocId(uid, courseId)).get();
                 const data = snap.exists ? snap.data() : null;
-                if (data) enrolledMap[courseId] = data;
+                if (data && currentUser?.uid === uid) enrolledMap[courseId] = data;
                 return data;
             } catch (e) { return null; }
         }
@@ -232,20 +339,22 @@ const Store = {
         enrolledMap[courseId] = e;
         return e;
     },
-    async completeCourse(courseId, scorePercent, certId, extra) {
+    async completeCourse(courseId, scorePercent, certId, extra, isCurrent) {
+        const uid = currentUser?.uid;
+        if (!uid || (isCurrent && !isCurrent())) throw new Error('Exam session changed');
         const e = await this.getEnrollment(courseId);
+        if (currentUser?.uid !== uid || (isCurrent && !isCurrent())) throw new Error('Exam session changed');
         if (!e) return null;
         e.status = 'completed'; e.scorePercent = scorePercent; e.certId = certId;
         const fields = { status: 'completed', scorePercent, certId };
         if (extra && extra.submissionUrl) { e.submissionUrl = extra.submissionUrl; fields.submissionUrl = extra.submissionUrl; }
         if (extra && extra.reflections) { e.reflections = extra.reflections; fields.reflections = extra.reflections; }
-        const uid = currentUser.uid;
         if (MODE === 'firebase') {
             await db.collection('enrollments').doc(enrollDocId(uid, courseId)).update(fields);
         } else {
             localStorage.setItem('oa_enroll_' + uid + '_' + courseId, JSON.stringify(e));
         }
-        enrolledMap[courseId] = e;
+        if (currentUser?.uid === uid && (!isCurrent || isCurrent())) enrolledMap[courseId] = e;
         return e;
     },
     async listEnrollments() {
@@ -278,6 +387,7 @@ const Store = {
 const VIEWS = ['catalogView', 'courseView', 'learnView', 'quizView', 'certView', 'myLearningView'];
 const HOME_SECTIONS = ['heroSection', 'how-it-works', 'builder', 'about', 'faq', 'support'];
 function showView(view) {
+    if (view !== 'quizView') resetExamSession();
     VIEWS.forEach(v => $(v).classList.toggle('hidden', v !== view));
     const home = view === 'catalogView';
     document.body.dataset.view = view;
@@ -835,6 +945,7 @@ function startExam() {
     if (c.capstone) { return startCapstone(); }
     const quiz = c.quiz || [];
     if (!quiz.length) { showToast('This course has no exam yet.'); return; }
+    const exam = beginExamSession(c, 'quizForm', 'q', quiz);
     $('quizView').innerHTML = `
         <button onclick="OA.openLearn('${c.id}')" class="text-sm font-bold text-ink-600 hover:underline mb-3"><i class="fas fa-arrow-left mr-1"></i>Back to lessons</button>
         <div class="bg-white rounded-2xl border border-ink-100 p-6">
@@ -857,9 +968,12 @@ function startExam() {
             <button onclick="OA.submitExam()" class="mt-4 w-full sm:w-auto bg-zam-green hover:bg-green-800 text-white font-bold px-8 py-3.5 rounded-xl transition"><i class="fas fa-paper-plane mr-2"></i>Submit exam</button>
         </div>`;
     showView('quizView');
+    applyAdminExamReview(exam);
 }
 
 async function submitExam() {
+    const exam = activeExam;
+    if (!isExamCurrent(exam) || exam.submitting) return;
     const c = learnCourse;
     const quiz = c.quiz || [];
     const form = $('quizForm');
@@ -876,7 +990,7 @@ async function submitExam() {
     }
     const pct = Math.round((correct / quiz.length) * 100);
     if (pct >= 70) {
-        await issueCertificate(c, pct);
+        await issueCertificate(c, pct, undefined, undefined, exam);
     } else {
         $('quizView').innerHTML = `
             <div class="bg-white rounded-2xl border border-ink-100 p-8 text-center">
@@ -901,6 +1015,7 @@ function startCapstone() {
     const checklist = cap.checklist || [];
     const reflect = cap.reflect || [];
     const knowledge = cap.knowledge || [];
+    const exam = beginExamSession(c, 'capKnow', 'k', knowledge);
     $('quizView').innerHTML = `
         <button onclick="OA.openLearn('${c.id}')" class="text-sm font-bold text-ink-600 hover:underline mb-3"><i class="fas fa-arrow-left mr-1"></i>Back to lessons</button>
         <div class="bg-white rounded-2xl border border-ink-100 p-6">
@@ -938,9 +1053,12 @@ function startCapstone() {
             <button onclick="OA.submitCapstone()" class="mt-5 w-full sm:w-auto bg-zam-green hover:bg-green-800 text-white font-bold px-8 py-3.5 rounded-xl transition"><i class="fas fa-paper-plane mr-2"></i>Present to the mentor</button>
         </div>`;
     showView('quizView');
+    applyAdminExamReview(exam);
 }
 
 async function submitCapstone() {
+    const exam = activeExam;
+    if (!isExamCurrent(exam) || exam.submitting) return;
     const c = learnCourse;
     const cap = c.capstone || {};
     const err = $('capError');
@@ -977,7 +1095,7 @@ async function submitCapstone() {
     }
 
     const mentor = `Your website is live at <a href="${esc(url)}" target="_blank" rel="noopener" class="text-ink-600 font-bold underline break-all">${esc(url)}</a>. You took a real site from an idea to the internet — exactly what paying clients need. Keep this in your portfolio, and when you're ready, apply to the ORIZIS Builder Network.`;
-    await issueCertificate(c, pct, { submissionUrl: url, reflections }, mentor);
+    await issueCertificate(c, pct, { submissionUrl: url, reflections }, mentor, exam);
 }
 
 /* ================================================================
@@ -992,7 +1110,11 @@ function verifyUrl(certId) {
     return new URL('verify.html', location.href).href + '?id=' + encodeURIComponent(certId);
 }
 
-async function issueCertificate(course, scorePercent, extra, mentorMsg) {
+async function issueCertificate(course, scorePercent, extra, mentorMsg, exam) {
+    if (!isExamCurrent(exam) || exam.submitting) return;
+    exam.submitting = true;
+    examReviewRequest++;
+    const isCurrent = () => isExamCurrent(exam);
     const certId = newCertId();
     const cert = {
         certId, userId: currentUser.uid, userName: currentUser.name || 'Learner',
@@ -1001,13 +1123,15 @@ async function issueCertificate(course, scorePercent, extra, mentorMsg) {
     };
     if (extra && extra.submissionUrl) cert.projectUrl = extra.submissionUrl;
     try {
-        await Store.completeCourse(course.id, scorePercent, certId, extra); // must be 'completed' before cert (Firestore rule)
+        const completed = await Store.completeCourse(course.id, scorePercent, certId, extra, isCurrent); // must be 'completed' before cert (Firestore rule)
+        if (!isCurrent()) return;
+        if (!completed) throw new Error('Course enrollment could not be found');
         await Store.createCertificate(cert);
+        if (!isCurrent()) return;
     } catch (e) {
-        console.error('Certificate save failed:', e);
-        showToast('Could not save certificate. Please try again.');
+        if (isCurrent()) { console.error('Certificate save failed:', e); showToast('Could not save certificate. Please try again.'); }
         return;
-    }
+    } finally { exam.submitting = false; }
     renderCertificate(cert, mentorMsg);
 }
 
@@ -1283,7 +1407,11 @@ async function onSignedIn(user) {
     updateAccountUi();
     closeAuth();
     // Preload enrolments for badges
-    try { (await Store.listEnrollments()).forEach(e => { enrolledMap[e.courseId] = e; }); } catch (e) {}
+    const sessionVersion = authSessionVersion;
+    let enrollments = [];
+    try { enrollments = await Store.listEnrollments(); } catch (e) {}
+    if (currentUser !== user || authSessionVersion !== sessionVersion) return;
+    enrollments.forEach(e => { enrolledMap[e.courseId] = e; });
     renderCatalog();
     showToast('Welcome, ' + (user.name || 'learner') + '! 👋');
     if (pendingScholarshipCourse) {
@@ -1299,6 +1427,8 @@ async function onSignedIn(user) {
 
 function doSignOut() {
     toggleAccountMenu(false);
+    authSessionVersion++;
+    resetExamSession();
     if (MODE === 'firebase') { auth.signOut(); }
     else { localStorage.removeItem('oa_local_user'); currentUser = null; enrolledMap = {}; scholarshipMap = {}; updateAccountUi(); renderCatalog(); }
     showToast('Logged out.');
@@ -1382,10 +1512,7 @@ function boot() {
         window.VP.init().catch(() => {});
     }
     if (MODE === 'firebase') {
-        auth.onAuthStateChanged(u => {
-            if (u) onSignedIn({ uid: u.uid, name: u.displayName || (u.email ? u.email.split('@')[0] : 'Learner'), email: u.email });
-            else { currentUser = null; enrolledMap = {}; scholarshipMap = {}; updateAccountUi(); }
-        });
+        auth.onIdTokenChanged(handleFirebaseSession);
     } else {
         const gw = document.getElementById('googleWrap'); if (gw) gw.style.display = 'none'; // demo mode: no Google popup
         const raw = localStorage.getItem('oa_local_user');

@@ -1,5 +1,5 @@
 /* Lernoto service worker - enables app installation and basic offline shell */
-const CACHE = 'lernoto-google-auth-20260921';
+const CACHE = 'lernoto-admin-exam-review-20260923';
 
 self.addEventListener('install', e => {
     self.skipWaiting();
